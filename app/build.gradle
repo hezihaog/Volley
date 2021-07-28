@@ -6,6 +6,8 @@ android {
     compileSdkVersion 31
     buildToolsVersion "30.0.3"
 
+    useLibrary 'org.apache.http.legacy'
+
     defaultConfig {
         applicationId "com.zh.android.volley"
         minSdkVersion 19

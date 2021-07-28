@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An HttpStack that performs request over an {@link HttpClient}.
+ * 基于HttpClient的请求实现类
  */
 public class HttpClientStack implements HttpStack {
     protected final HttpClient mClient;
@@ -92,7 +92,7 @@ public class HttpClientStack implements HttpStack {
      */
     @SuppressWarnings("deprecation")
     /* protected */ static HttpUriRequest createHttpRequest(Request<?> request,
-            Map<String, String> additionalHeaders) throws AuthFailureError {
+                                                            Map<String, String> additionalHeaders) throws AuthFailureError {
         switch (request.getMethod()) {
             case Method.DEPRECATED_GET_OR_POST: {
                 // This is the deprecated way that needs to be handled for backwards compatibility.
@@ -144,7 +144,7 @@ public class HttpClientStack implements HttpStack {
     }
 
     private static void setEntityIfNonEmptyBody(HttpEntityEnclosingRequestBase httpRequest,
-            Request<?> request) throws AuthFailureError {
+                                                Request<?> request) throws AuthFailureError {
         byte[] body = request.getBody();
         if (body != null) {
             HttpEntity entity = new ByteArrayEntity(body);

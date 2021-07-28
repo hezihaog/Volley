@@ -34,17 +34,16 @@ public class Volley {
     private static final String DEFAULT_CACHE_DIR = "volley";
 
     /**
-     * Creates a default instance of the worker pool and calls {@link RequestQueue#start()} on it.
-     * You may set a maximum size of the disk cache in bytes.
+     * 创建请求队列，支持设置请求实现和最大磁盘缓存大小
      *
-     * @param context           A {@link Context} to use for creating the cache dir.
-     * @param stack             An {@link HttpStack} to use for the network, or null for default.
-     * @param maxDiskCacheBytes the maximum size of the disk cache, in bytes. Use -1 for default size.
-     * @return A started {@link RequestQueue} instance.
+     * @param stack             请求实现，传null则自动根据版本选择
+     * @param maxDiskCacheBytes 最大磁盘缓存大小，传-1则使用默认的5Ms
      */
     public static RequestQueue newRequestQueue(Context context, HttpStack stack, int maxDiskCacheBytes) {
+        //缓存目录
         File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
 
+        //设置UA
         String userAgent = "volley/0";
         try {
             String packageName = context.getPackageName();
@@ -53,6 +52,7 @@ public class Volley {
         } catch (NameNotFoundException e) {
         }
 
+        //没有指定请求实现，根据版本选择
         if (stack == null) {
             if (Build.VERSION.SDK_INT >= 9) {
                 stack = new HurlStack();
@@ -63,50 +63,44 @@ public class Volley {
             }
         }
 
+        //创建网络操作实现
         Network network = new BasicNetwork(stack);
 
         RequestQueue queue;
+        //根据传入的磁盘缓存大小，创建请求队列
         if (maxDiskCacheBytes <= -1) {
-            // No maximum size specified
+            //没有设置，使用默认值创建
             queue = new RequestQueue(new DiskBasedCache(cacheDir), network);
         } else {
-            // Disk cache size specified
+            //设置了，则使用指定的值
             queue = new RequestQueue(new DiskBasedCache(cacheDir, maxDiskCacheBytes), network);
         }
 
+        //开启队列
         queue.start();
-
         return queue;
     }
 
     /**
-     * Creates a default instance of the worker pool and calls {@link RequestQueue#start()} on it.
-     * You may set a maximum size of the disk cache in bytes.
+     * 创建请求队列，支持设置请求实现和最大磁盘缓存大小
      *
-     * @param context           A {@link Context} to use for creating the cache dir.
-     * @param maxDiskCacheBytes the maximum size of the disk cache, in bytes. Use -1 for default size.
-     * @return A started {@link RequestQueue} instance.
+     * @param maxDiskCacheBytes 最大磁盘缓存大小
      */
     public static RequestQueue newRequestQueue(Context context, int maxDiskCacheBytes) {
         return newRequestQueue(context, null, maxDiskCacheBytes);
     }
 
     /**
-     * Creates a default instance of the worker pool and calls {@link RequestQueue#start()} on it.
+     * 创建请求队列，支持设置请求实现
      *
-     * @param context A {@link Context} to use for creating the cache dir.
-     * @param stack   An {@link HttpStack} to use for the network, or null for default.
-     * @return A started {@link RequestQueue} instance.
+     * @param stack 请求实现
      */
     public static RequestQueue newRequestQueue(Context context, HttpStack stack) {
         return newRequestQueue(context, stack, -1);
     }
 
     /**
-     * Creates a default instance of the worker pool and calls {@link RequestQueue#start()} on it.
-     *
-     * @param context A {@link Context} to use for creating the cache dir.
-     * @return A started {@link RequestQueue} instance.
+     * 创建请求队列
      */
     public static RequestQueue newRequestQueue(Context context) {
         return newRequestQueue(context, null);
