@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.volley">
 
-    <application android:usesCleartextTraffic="true">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application>
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
