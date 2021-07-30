@@ -48,20 +48,32 @@ import java.util.Map;
  * 基于HttpClient的请求实现类
  */
 public class HttpClientStack implements HttpStack {
+    /**
+     * HttpClient实例
+     */
     protected final HttpClient mClient;
 
+    /**
+     * Content-Type标识
+     */
     private final static String HEADER_CONTENT_TYPE = "Content-Type";
 
     public HttpClientStack(HttpClient client) {
         mClient = client;
     }
 
+    /**
+     * 给HttpUriRequest对象设置请求头
+     */
     private static void addHeaders(HttpUriRequest httpRequest, Map<String, String> headers) {
         for (String key : headers.keySet()) {
             httpRequest.setHeader(key, headers.get(key));
         }
     }
 
+    /**
+     * Map<String, String>请求参数Map转List<NameValuePair>
+     */
     @SuppressWarnings("unused")
     private static List<NameValuePair> getPostParameterPairs(Map<String, String> postParams) {
         List<NameValuePair> result = new ArrayList<NameValuePair>(postParams.size());
@@ -74,21 +86,26 @@ public class HttpClientStack implements HttpStack {
     @Override
     public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
             throws IOException, AuthFailureError {
+        //创建请求
         HttpUriRequest httpRequest = createHttpRequest(request, additionalHeaders);
+        //添加请求头
         addHeaders(httpRequest, additionalHeaders);
         addHeaders(httpRequest, request.getHeaders());
+        //请求前回调一下，子类可以重写做额外的处理
         onPrepareRequest(httpRequest);
+        //获取请求参数
         HttpParams httpParams = httpRequest.getParams();
+        //获取超时时间
         int timeoutMs = request.getTimeoutMs();
-        // TODO: Reevaluate this connection timeout based on more wide-scale
-        // data collection and possibly different for wifi vs. 3G.
+        //设置超时时间
         HttpConnectionParams.setConnectionTimeout(httpParams, 5000);
         HttpConnectionParams.setSoTimeout(httpParams, timeoutMs);
+        //执行请求
         return mClient.execute(httpRequest);
     }
 
     /**
-     * Creates the appropriate subclass of HttpUriRequest for passed in request.
+     * 为请求创建对应的HttpUriRequest子类
      */
     @SuppressWarnings("deprecation")
     /* protected */ static HttpUriRequest createHttpRequest(Request<?> request,
@@ -98,6 +115,7 @@ public class HttpClientStack implements HttpStack {
                 // This is the deprecated way that needs to be handled for backwards compatibility.
                 // If the request's post body is null, then the assumption is that the request is
                 // GET.  Otherwise, it is assumed that the request is a POST.
+                //有请求体，则设置为POST请求
                 byte[] postBody = request.getPostBody();
                 if (postBody != null) {
                     HttpPost postRequest = new HttpPost(request.getUrl());
@@ -107,6 +125,7 @@ public class HttpClientStack implements HttpStack {
                     postRequest.setEntity(entity);
                     return postRequest;
                 } else {
+                    //没有请求体，则设置给GET请求
                     return new HttpGet(request.getUrl());
                 }
             }
@@ -116,7 +135,9 @@ public class HttpClientStack implements HttpStack {
                 return new HttpDelete(request.getUrl());
             case Method.POST: {
                 HttpPost postRequest = new HttpPost(request.getUrl());
+                //设置Content-Type
                 postRequest.addHeader(HEADER_CONTENT_TYPE, request.getBodyContentType());
+                //设置请求体
                 setEntityIfNonEmptyBody(postRequest, request);
                 return postRequest;
             }
@@ -143,6 +164,9 @@ public class HttpClientStack implements HttpStack {
         }
     }
 
+    /**
+     * 设置请求体，如果不为空
+     */
     private static void setEntityIfNonEmptyBody(HttpEntityEnclosingRequestBase httpRequest,
                                                 Request<?> request) throws AuthFailureError {
         byte[] body = request.getBody();
@@ -153,19 +177,16 @@ public class HttpClientStack implements HttpStack {
     }
 
     /**
-     * Called before the request is executed using the underlying HttpClient.
-     *
-     * <p>Overwrite in subclasses to augment the request.</p>
+     * 在执行请求前回调，子类可以复写该方法做额外处理
      */
     protected void onPrepareRequest(HttpUriRequest request) throws IOException {
         // Nothing.
     }
 
     /**
-     * The HttpPatch class does not exist in the Android framework, so this has been defined here.
+     * PATCH类型请求，这个请求方式在安卓中不存在，所以在这里定义
      */
     public static final class HttpPatch extends HttpEntityEnclosingRequestBase {
-
         public final static String METHOD_NAME = "PATCH";
 
         public HttpPatch() {
@@ -189,6 +210,5 @@ public class HttpClientStack implements HttpStack {
         public String getMethod() {
             return METHOD_NAME;
         }
-
     }
 }
