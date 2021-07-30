@@ -52,31 +52,40 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A network performing Volley requests over an {@link HttpStack}.
+ * 请求操作实现，内部会使用 {@link HttpStack}. 来执行发出的请求
  */
 public class BasicNetwork implements Network {
     protected static final boolean DEBUG = VolleyLog.DEBUG;
 
-    private static int SLOW_REQUEST_THRESHOLD_MS = 3000;
+    /**
+     * 判断是否是慢请求的超时时间
+     */
+    private static final int SLOW_REQUEST_THRESHOLD_MS = 3000;
 
-    private static int DEFAULT_POOL_SIZE = 4096;
+    private static final int DEFAULT_POOL_SIZE = 4096;
 
+    /**
+     * HttpStack实现类
+     */
     protected final HttpStack mHttpStack;
 
+    /**
+     * 缓冲池
+     */
     protected final ByteArrayPool mPool;
 
     /**
-     * @param httpStack HTTP stack to be used
+     * 构造方法，可以指定HttpStack实现，使用默认的缓冲池
      */
     public BasicNetwork(HttpStack httpStack) {
-        // If a pool isn't passed in, then build a small default pool that will give us a lot of
-        // benefit and not use too much memory.
         this(httpStack, new ByteArrayPool(DEFAULT_POOL_SIZE));
     }
 
     /**
-     * @param httpStack HTTP stack to be used
-     * @param pool a buffer pool that improves GC performance in copy operations
+     * 构造方法，可以指定HttpStack实现和缓冲池
+     *
+     * @param httpStack HttpStack实现
+     * @param pool      缓冲池
      */
     public BasicNetwork(HttpStack httpStack, ByteArrayPool pool) {
         mHttpStack = httpStack;
@@ -85,23 +94,29 @@ public class BasicNetwork implements Network {
 
     @Override
     public NetworkResponse performRequest(Request<?> request) throws VolleyError {
+        //开始时间
         long requestStart = SystemClock.elapsedRealtime();
+        //死循环，如果成功则跳出循环，出错会重试，重试到一定次数后，抛出异常，跳出循环
         while (true) {
             HttpResponse httpResponse = null;
             byte[] responseContents = null;
             Map<String, String> responseHeaders = Collections.emptyMap();
             try {
-                // Gather headers.
+                //创建请求头
                 Map<String, String> headers = new HashMap<String, String>();
+                //添加缓存请求头
                 addCacheHeaders(headers, request.getCacheEntry());
+                //发起请求
                 httpResponse = mHttpStack.performRequest(request, headers);
+                //获取响应状态行
                 StatusLine statusLine = httpResponse.getStatusLine();
+                //获取响应状态码
                 int statusCode = statusLine.getStatusCode();
 
+                //转换响应头
                 responseHeaders = convertHeaders(httpResponse.getAllHeaders());
-                // Handle cache validation.
+                //处理缓存和验证
                 if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
-
                     Entry entry = request.getCacheEntry();
                     if (entry == null) {
                         return new NetworkResponse(HttpStatus.SC_NOT_MODIFIED, null,
@@ -118,29 +133,30 @@ public class BasicNetwork implements Network {
                             entry.responseHeaders, true,
                             SystemClock.elapsedRealtime() - requestStart);
                 }
-                
-                // Handle moved resources
+
+                //301和302状态码，是重定向，301代表请求的资源永久被移除了，而302是资源还在，但临时地跳转到另外一个链接
                 if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || statusCode == HttpStatus.SC_MOVED_TEMPORARILY) {
-                	String newUrl = responseHeaders.get("Location");
-                	request.setRedirectUrl(newUrl);
+                    String newUrl = responseHeaders.get("Location");
+                    request.setRedirectUrl(newUrl);
                 }
 
-                // Some responses such as 204s do not have content.  We must check.
+                //处理内容
                 if (httpResponse.getEntity() != null) {
-                  responseContents = entityToBytes(httpResponse.getEntity());
+                    responseContents = entityToBytes(httpResponse.getEntity());
                 } else {
-                  // Add 0 byte response as a way of honestly representing a
-                  // no-content request.
-                  responseContents = new byte[0];
+                    //处理没有内容的响应
+                    responseContents = new byte[0];
                 }
 
-                // if the request is slow, log it.
+                //打印慢请求
                 long requestLifetime = SystemClock.elapsedRealtime() - requestStart;
                 logSlowRequests(requestLifetime, request, responseContents, statusLine);
 
+                //200和299的状态码处理
                 if (statusCode < 200 || statusCode > 299) {
                     throw new IOException();
                 }
+                //返回响应
                 return new NetworkResponse(statusCode, responseContents, responseHeaders, false,
                         SystemClock.elapsedRealtime() - requestStart);
             } catch (SocketTimeoutException e) {
@@ -157,25 +173,29 @@ public class BasicNetwork implements Network {
                 } else {
                     throw new NoConnectionError(e);
                 }
-                if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || 
-                		statusCode == HttpStatus.SC_MOVED_TEMPORARILY) {
-                	VolleyLog.e("Request at %s has been redirected to %s", request.getOriginUrl(), request.getUrl());
+                //301、302重定向
+                if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY ||
+                        statusCode == HttpStatus.SC_MOVED_TEMPORARILY) {
+                    VolleyLog.e("Request at %s has been redirected to %s", request.getOriginUrl(), request.getUrl());
                 } else {
-                	VolleyLog.e("Unexpected response code %d for %s", statusCode, request.getUrl());
+                    VolleyLog.e("Unexpected response code %d for %s", statusCode, request.getUrl());
                 }
                 if (responseContents != null) {
                     networkResponse = new NetworkResponse(statusCode, responseContents,
                             responseHeaders, false, SystemClock.elapsedRealtime() - requestStart);
+                    //401和403，进行重试
                     if (statusCode == HttpStatus.SC_UNAUTHORIZED ||
                             statusCode == HttpStatus.SC_FORBIDDEN) {
                         attemptRetryOnException("auth",
                                 request, new AuthFailureError(networkResponse));
-                    } else if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || 
-                    			statusCode == HttpStatus.SC_MOVED_TEMPORARILY) {
+                    } else if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY ||
+                            statusCode == HttpStatus.SC_MOVED_TEMPORARILY) {
+                        //301、302，重试到新地铁
                         attemptRetryOnException("redirect",
                                 request, new RedirectError(networkResponse));
                     } else {
                         // TODO: Only throw ServerError for 5xx status codes.
+                        //其他则是服务器异常
                         throw new ServerError(networkResponse);
                     }
                 } else {
@@ -186,25 +206,27 @@ public class BasicNetwork implements Network {
     }
 
     /**
-     * Logs requests that took over SLOW_REQUEST_THRESHOLD_MS to complete.
+     * 慢请求打印
      */
     private void logSlowRequests(long requestLifetime, Request<?> request,
-            byte[] responseContents, StatusLine statusLine) {
+                                 byte[] responseContents, StatusLine statusLine) {
         if (DEBUG || requestLifetime > SLOW_REQUEST_THRESHOLD_MS) {
             VolleyLog.d("HTTP response for request=<%s> [lifetime=%d], [size=%s], " +
-                    "[rc=%d], [retryCount=%s]", request, requestLifetime,
+                            "[rc=%d], [retryCount=%s]", request, requestLifetime,
                     responseContents != null ? responseContents.length : "null",
                     statusLine.getStatusCode(), request.getRetryPolicy().getCurrentRetryCount());
         }
     }
 
     /**
-     * Attempts to prepare the request for a retry. If there are no more attempts remaining in the
-     * request's retry policy, a timeout exception is thrown.
-     * @param request The request to use.
+     * 重试请求，如果达到重试次数会抛出异常
+     *
+     * @param logPrefix Log打印的前缀
+     * @param request   请求对象
+     * @param exception 到达重试次数后，会抛出的异常
      */
     private static void attemptRetryOnException(String logPrefix, Request<?> request,
-            VolleyError exception) throws VolleyError {
+                                                VolleyError exception) throws VolleyError {
         RetryPolicy retryPolicy = request.getRetryPolicy();
         int oldTimeout = request.getTimeoutMs();
 
@@ -218,8 +240,11 @@ public class BasicNetwork implements Network {
         request.addMarker(String.format("%s-retry [timeout=%s]", logPrefix, oldTimeout));
     }
 
+    /**
+     * 添加Http缓存头
+     */
     private void addCacheHeaders(Map<String, String> headers, Entry entry) {
-        // If there's no cache entry, we're done.
+        //该请求不需要缓存，不需要添加
         if (entry == null) {
             return;
         }
@@ -234,12 +259,17 @@ public class BasicNetwork implements Network {
         }
     }
 
+    /**
+     * 打印错误
+     */
     protected void logError(String what, String url, long start) {
         long now = SystemClock.elapsedRealtime();
         VolleyLog.v("HTTP ERROR(%s) %d ms to fetch %s", what, (now - start), url);
     }
 
-    /** Reads the contents of HttpEntity into a byte[]. */
+    /**
+     * 把HttpEntity的内容转换到byte数组中
+     */
     private byte[] entityToBytes(HttpEntity entity) throws IOException, ServerError {
         PoolingByteArrayOutputStream bytes =
                 new PoolingByteArrayOutputStream(mPool, (int) entity.getContentLength());
@@ -270,10 +300,10 @@ public class BasicNetwork implements Network {
     }
 
     /**
-     * Converts Headers[] to Map<String, String>.
+     * 把 Headers[] 转换到 Map<String, String>
      */
     protected static Map<String, String> convertHeaders(Header[] headers) {
-        Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, String> result = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (int i = 0; i < headers.length; i++) {
             result.put(headers[i].getName(), headers[i].getValue());
         }

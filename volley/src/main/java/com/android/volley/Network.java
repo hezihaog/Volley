@@ -17,14 +17,15 @@
 package com.android.volley;
 
 /**
- * An interface for performing requests.
+ * 网络请求接口
  */
 public interface Network {
     /**
      * Performs the specified request.
-     * @param request Request to process
-     * @return A {@link NetworkResponse} with data and caching metadata; will never be null
-     * @throws VolleyError on errors
+     *
+     * @param request 准备处理的请求
+     * @return A {@link NetworkResponse} 请求响应
+     * @throws VolleyError 异常对象
      */
-    public NetworkResponse performRequest(Request<?> request) throws VolleyError;
+    NetworkResponse performRequest(Request<?> request) throws VolleyError;
 }
