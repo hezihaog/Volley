@@ -29,17 +29,17 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 
 /**
- * A request for retrieving a {@link JSONArray} response body at a given URL.
+ * 响应为 JSONArray 类型的请求
  */
 public class JsonArrayRequest extends JsonRequest<JSONArray> {
-
     /**
      * Creates a new request.
-     * @param method the HTTP method to use
-     * @param url URL to fetch the JSON from
-     * @param requestBody A {@link String} to post with the request. Null is allowed and
-     *   indicates no parameters will be posted along with request.
-     * @param listener Listener to receive the JSON response
+     *
+     * @param method        the HTTP method to use
+     * @param url           URL to fetch the JSON from
+     * @param requestBody   A {@link String} to post with the request. Null is allowed and
+     *                      indicates no parameters will be posted along with request.
+     * @param listener      Listener to receive the JSON response
      * @param errorListener Error listener, or null to ignore errors.
      */
     public JsonArrayRequest(int method, String url, String requestBody,
@@ -50,8 +50,9 @@ public class JsonArrayRequest extends JsonRequest<JSONArray> {
 
     /**
      * Creates a new request.
-     * @param url URL to fetch the JSON from
-     * @param listener Listener to receive the JSON response
+     *
+     * @param url           URL to fetch the JSON from
+     * @param listener      Listener to receive the JSON response
      * @param errorListener Error listener, or null to ignore errors.
      */
     public JsonArrayRequest(String url, Listener<JSONArray> listener, ErrorListener errorListener) {
@@ -60,9 +61,10 @@ public class JsonArrayRequest extends JsonRequest<JSONArray> {
 
     /**
      * Creates a new request.
-     * @param method the HTTP method to use
-     * @param url URL to fetch the JSON from
-     * @param listener Listener to receive the JSON response
+     *
+     * @param method        the HTTP method to use
+     * @param url           URL to fetch the JSON from
+     * @param listener      Listener to receive the JSON response
      * @param errorListener Error listener, or null to ignore errors.
      */
     public JsonArrayRequest(int method, String url, Listener<JSONArray> listener, ErrorListener errorListener) {
@@ -71,26 +73,28 @@ public class JsonArrayRequest extends JsonRequest<JSONArray> {
 
     /**
      * Creates a new request.
-     * @param method the HTTP method to use
-     * @param url URL to fetch the JSON from
-     * @param jsonRequest A {@link JSONArray} to post with the request. Null is allowed and
-     *   indicates no parameters will be posted along with request.
-     * @param listener Listener to receive the JSON response
+     *
+     * @param method        the HTTP method to use
+     * @param url           URL to fetch the JSON from
+     * @param jsonRequest   A {@link JSONArray} to post with the request. Null is allowed and
+     *                      indicates no parameters will be posted along with request.
+     * @param listener      Listener to receive the JSON response
      * @param errorListener Error listener, or null to ignore errors.
      */
-    public JsonArrayRequest(int method, String url, JSONArray jsonRequest, 
-            Listener<JSONArray> listener, ErrorListener errorListener) {
+    public JsonArrayRequest(int method, String url, JSONArray jsonRequest,
+                            Listener<JSONArray> listener, ErrorListener errorListener) {
         super(method, url, (jsonRequest == null) ? null : jsonRequest.toString(), listener,
                 errorListener);
     }
 
     /**
      * Creates a new request.
-     * @param method the HTTP method to use
-     * @param url URL to fetch the JSON from
-     * @param jsonRequest A {@link JSONObject} to post with the request. Null is allowed and
-     *   indicates no parameters will be posted along with request.
-     * @param listener Listener to receive the JSON response
+     *
+     * @param method        the HTTP method to use
+     * @param url           URL to fetch the JSON from
+     * @param jsonRequest   A {@link JSONObject} to post with the request. Null is allowed and
+     *                      indicates no parameters will be posted along with request.
+     * @param listener      Listener to receive the JSON response
      * @param errorListener Error listener, or null to ignore errors.
      */
     public JsonArrayRequest(int method, String url, JSONObject jsonRequest,
@@ -118,7 +122,7 @@ public class JsonArrayRequest extends JsonRequest<JSONArray> {
      * @see #JsonArrayRequest(int, String, JSONObject, Listener, ErrorListener)
      */
     public JsonArrayRequest(String url, JSONObject jsonRequest, Listener<JSONArray> listener,
-                             ErrorListener errorListener) {
+                            ErrorListener errorListener) {
         this(jsonRequest == null ? Method.GET : Method.POST, url, jsonRequest,
                 listener, errorListener);
     }
@@ -126,14 +130,14 @@ public class JsonArrayRequest extends JsonRequest<JSONArray> {
     @Override
     protected Response<JSONArray> parseNetworkResponse(NetworkResponse response) {
         try {
+            //解析响应为字符串
             String jsonString = new String(response.data,
                     HttpHeaderParser.parseCharset(response.headers, PROTOCOL_CHARSET));
+            //再把字符串解析为JSONArray返回
             return Response.success(new JSONArray(jsonString),
                     HttpHeaderParser.parseCacheHeaders(response));
-        } catch (UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException | JSONException e) {
             return Response.error(new ParseError(e));
-        } catch (JSONException je) {
-            return Response.error(new ParseError(je));
         }
     }
 }

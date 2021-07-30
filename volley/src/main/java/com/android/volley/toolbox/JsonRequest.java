@@ -26,35 +26,42 @@ import com.android.volley.VolleyLog;
 import java.io.UnsupportedEncodingException;
 
 /**
- * A request for retrieving a T type response body at a given URL that also
- * optionally sends along a JSON body in the request specified.
- *
- * @param <T> JSON type of response expected
+ * JSON请求
  */
 public abstract class JsonRequest<T> extends Request<T> {
-    /** Default charset for JSON request. */
+    /**
+     * 默认字符集
+     */
     protected static final String PROTOCOL_CHARSET = "utf-8";
 
-    /** Content type for request. */
+    /**
+     * JSON请求的Content-Type
+     */
     private static final String PROTOCOL_CONTENT_TYPE =
-        String.format("application/json; charset=%s", PROTOCOL_CHARSET);
+            String.format("application/json; charset=%s", PROTOCOL_CHARSET);
 
+    /**
+     * 响应监听器
+     */
     private Listener<T> mListener;
+    /**
+     * JSON体
+     */
     private final String mRequestBody;
 
     /**
-     * Deprecated constructor for a JsonRequest which defaults to GET unless {@link #getPostBody()}
-     * or {@link #getPostParams()} is overridden (which defaults to POST).
-     *
-     * @deprecated Use {@link #JsonRequest(int, String, String, Listener, ErrorListener)}.
+     * 废弃构造方法，默认GET请求，如果 {@link #getPostBody()} 或 {@link #getPostParams()} 被复写，则为POST请求
      */
     public JsonRequest(String url, String requestBody, Listener<T> listener,
-            ErrorListener errorListener) {
+                       ErrorListener errorListener) {
         this(Method.DEPRECATED_GET_OR_POST, url, requestBody, listener, errorListener);
     }
 
+    /**
+     * 手动指定请求方法，进行JSON请求
+     */
     public JsonRequest(int method, String url, String requestBody, Listener<T> listener,
-            ErrorListener errorListener) {
+                       ErrorListener errorListener) {
         super(method, url, errorListener);
         mListener = listener;
         mRequestBody = requestBody;
@@ -63,16 +70,23 @@ public abstract class JsonRequest<T> extends Request<T> {
     @Override
     protected void onFinish() {
         super.onFinish();
+        //请求结束，清理回调
         mListener = null;
     }
 
     @Override
     protected void deliverResponse(T response) {
+        //回调响应成功
         if (mListener != null) {
             mListener.onResponse(response);
         }
     }
 
+    /**
+     * 子类进行JsonObject或JsonArray的处理
+     *
+     * @param response 响应实体
+     */
     @Override
     abstract protected Response<T> parseNetworkResponse(NetworkResponse response);
 
@@ -99,6 +113,7 @@ public abstract class JsonRequest<T> extends Request<T> {
 
     @Override
     public byte[] getBody() {
+        //JSON字符串转换为byte数组
         try {
             return mRequestBody == null ? null : mRequestBody.getBytes(PROTOCOL_CHARSET);
         } catch (UnsupportedEncodingException uee) {

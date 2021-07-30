@@ -19,7 +19,7 @@ package com.android.volley.toolbox;
 import com.android.volley.Cache;
 
 /**
- * A cache that doesn't.
+ * 不缓存的实现，所有操作方法都是空实现
  */
 public class NoCache implements Cache {
     @Override
