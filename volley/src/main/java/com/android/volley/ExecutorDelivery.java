@@ -21,18 +21,21 @@ import android.os.Handler;
 import java.util.concurrent.Executor;
 
 /**
- * Delivers responses and errors.
+ * 传递响应和错误
  */
 public class ExecutorDelivery implements ResponseDelivery {
-    /** Used for posting responses, typically to the main thread. */
+    /**
+     * 传递响应的线程切换Executor，一般为主线程
+     */
     private final Executor mResponsePoster;
 
     /**
-     * Creates a new response delivery interface.
-     * @param handler {@link Handler} to post responses on
+     * 构造方法，传入Handler
+     *
+     * @param handler 通过这个 {@link Handler} 进行回调
      */
     public ExecutorDelivery(final Handler handler) {
-        // Make an Executor that just wraps the handler.
+        //创建Executor，它会使用Handler进行执行
         mResponsePoster = new Executor() {
             @Override
             public void execute(Runnable command) {
@@ -42,9 +45,7 @@ public class ExecutorDelivery implements ResponseDelivery {
     }
 
     /**
-     * Creates a new response delivery interface, mockable version
-     * for testing.
-     * @param executor For running delivery tasks
+     * 构造方法，传入指定的Executor进行执行和回调
      */
     public ExecutorDelivery(Executor executor) {
         mResponsePoster = executor;
@@ -70,11 +71,10 @@ public class ExecutorDelivery implements ResponseDelivery {
     }
 
     /**
-     * A Runnable used for delivering network responses to a listener on the
-     * main thread.
+     * 这个Runnable用于包装，用于在主线程回调
      */
     @SuppressWarnings("rawtypes")
-    private class ResponseDeliveryRunnable implements Runnable {
+    private static class ResponseDeliveryRunnable implements Runnable {
         private final Request mRequest;
         private final Response mResponse;
         private final Runnable mRunnable;
@@ -88,31 +88,31 @@ public class ExecutorDelivery implements ResponseDelivery {
         @SuppressWarnings("unchecked")
         @Override
         public void run() {
-            // If this request has canceled, finish it and don't deliver.
+            //请求被取消了，不进行回调
             if (mRequest.isCanceled()) {
                 mRequest.finish("canceled-at-delivery");
                 return;
             }
 
-            // Deliver a normal response or error, depending.
+            //响应成功或失败，这里会回调调用方的监听器
             if (mResponse.isSuccess()) {
                 mRequest.deliverResponse(mResponse.result);
             } else {
                 mRequest.deliverError(mResponse.error);
             }
 
-            // If this is an intermediate response, add a marker, otherwise we're done
-            // and the request can be finished.
+            //如果是一个中间响应，标记一下
             if (mResponse.intermediate) {
                 mRequest.addMarker("intermediate-response");
             } else {
+                //不是中间响应，标记完成
                 mRequest.finish("done");
             }
 
-            // If we have been provided a post-delivery runnable, run it.
+            //执行额外的Runnable
             if (mRunnable != null) {
                 mRunnable.run();
             }
-       }
+        }
     }
 }

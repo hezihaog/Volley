@@ -16,20 +16,22 @@
 
 package com.android.volley;
 
+/**
+ * 响应分发器
+ */
 public interface ResponseDelivery {
     /**
-     * Parses a response from the network or cache and delivers it.
+     * 传递响应
      */
-    public void postResponse(Request<?> request, Response<?> response);
+    void postResponse(Request<?> request, Response<?> response);
 
     /**
-     * Parses a response from the network or cache and delivers it. The provided
-     * Runnable will be executed after delivery.
+     * 传递响应，并且附带的Runnable将在传递之后执行
      */
-    public void postResponse(Request<?> request, Response<?> response, Runnable runnable);
+    void postResponse(Request<?> request, Response<?> response, Runnable runnable);
 
     /**
-     * Posts an error for the given request.
+     * 传递一个错误
      */
-    public void postError(Request<?> request, VolleyError error);
+    void postError(Request<?> request, VolleyError error);
 }

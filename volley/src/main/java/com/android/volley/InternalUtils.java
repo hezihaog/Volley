@@ -8,12 +8,15 @@ import java.security.NoSuchAlgorithmException;
  * User: mcxiaoke
  * Date: 15/3/17
  * Time: 14:47
+ * 内部工具类
  */
 class InternalUtils {
-
     // http://stackoverflow.com/questions/9655181/convert-from-byte-array-to-hex-string-in-java
     private final static char[] HEX_CHARS = "0123456789ABCDEF".toCharArray();
 
+    /**
+     * byte数组转十六进制
+     */
     private static String convertToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
@@ -24,6 +27,9 @@ class InternalUtils {
         return new String(hexChars);
     }
 
+    /**
+     * 对一个字符串做SHA-1哈希算法处理后返回
+     */
     public static String sha1Hash(String text) {
         String hash = null;
         try {
@@ -31,13 +37,9 @@ class InternalUtils {
             final byte[] bytes = text.getBytes("UTF-8");
             digest.update(bytes, 0, bytes.length);
             hash = convertToHex(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         return hash;
     }
-
-
 }

@@ -522,7 +522,7 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     }
 
     /**
-     * Returns true if responses to this request should be cached.
+     * 该请求是否应该被缓存
      */
     public final boolean shouldCache() {
         return mShouldCache;

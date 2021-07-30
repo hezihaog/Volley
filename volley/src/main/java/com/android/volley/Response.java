@@ -17,59 +17,69 @@
 package com.android.volley;
 
 /**
- * Encapsulates a parsed response for delivery.
- *
- * @param <T> Parsed type of this response
+ * 响应实体
  */
 public class Response<T> {
-
-    /** Callback interface for delivering parsed responses. */
+    /**
+     * 响应结果回调接口
+     */
     public interface Listener<T> {
-        /** Called when a response is received. */
-        public void onResponse(T response);
+        /**
+         * 收到响应时回调
+         */
+        void onResponse(T response);
     }
 
-    /** Callback interface for delivering error responses. */
+    /**
+     * 错误回调接口
+     */
     public interface ErrorListener {
         /**
-         * Callback method that an error has been occurred with the
-         * provided error code and optional user-readable message.
+         * 收到错误时回调
          */
-        public void onErrorResponse(VolleyError error);
+        void onErrorResponse(VolleyError error);
     }
 
-    /** Returns a successful response containing the parsed result. */
+    /**
+     * 构建一个成功的Response实例
+     */
     public static <T> Response<T> success(T result, Cache.Entry cacheEntry) {
         return new Response<T>(result, cacheEntry);
     }
 
     /**
-     * Returns a failed response containing the given error code and an optional
-     * localized message displayed to the user.
+     * 构建一个失败的Response实例
      */
     public static <T> Response<T> error(VolleyError error) {
         return new Response<T>(error);
     }
 
-    /** Parsed response, or null in the case of error. */
+    /**
+     * 解析到的响应结果，请求错误时为null
+     */
     public final T result;
 
-    /** Cache metadata for this response, or null in the case of error. */
+    /**
+     * 缓存信息，请求错误时为null
+     */
     public final Cache.Entry cacheEntry;
 
-    /** Detailed error information if <code>errorCode != OK</code>. */
+    /**
+     * 错误异常
+     */
     public final VolleyError error;
 
-    /** True if this response was a soft-expired one and a second one MAY be coming. */
+    /**
+     * 为true，则代表这个为软过期响应
+     */
     public boolean intermediate = false;
 
     /**
-     * Returns whether this response is considered successful.
+     * 判断该响应是否成功
      */
     public boolean isSuccess() {
         return error == null;
     }
-
 
     private Response(T result, Cache.Entry cacheEntry) {
         this.result = result;

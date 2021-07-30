@@ -17,11 +17,12 @@
 package com.android.volley;
 
 /**
- * Indicates that the server's response could not be parsed.
+ * 响应无法被解析异常
  */
 @SuppressWarnings("serial")
 public class ParseError extends VolleyError {
-    public ParseError() { }
+    public ParseError() {
+    }
 
     public ParseError(NetworkResponse networkResponse) {
         super(networkResponse);

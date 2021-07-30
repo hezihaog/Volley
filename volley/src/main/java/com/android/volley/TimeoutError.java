@@ -17,7 +17,8 @@
 package com.android.volley;
 
 /**
- * Indicates that the connection or the socket timed out.
+ * 超时异常
  */
 @SuppressWarnings("serial")
-public class TimeoutError extends VolleyError { }
+public class TimeoutError extends VolleyError {
+}
