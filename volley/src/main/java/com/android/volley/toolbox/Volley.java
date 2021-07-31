@@ -29,7 +29,7 @@ import java.io.File;
 
 public class Volley {
     /**
-     * Default on-disk cache directory.
+     * 默认磁盘缓存目录名
      */
     private static final String DEFAULT_CACHE_DIR = "volley";
 

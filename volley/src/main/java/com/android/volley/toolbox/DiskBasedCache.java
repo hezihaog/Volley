@@ -320,10 +320,7 @@ public class DiskBasedCache implements Cache {
     }
 
     /**
-     * Puts the entry with the specified key into the cache.
-     *
-     * @param key   The key to identify the entry by.
-     * @param entry The entry to cache.
+     * 添加一个缓存
      */
     private void putEntry(String key, CacheHeader entry) {
         if (!mEntries.containsKey(key)) {
@@ -336,7 +333,7 @@ public class DiskBasedCache implements Cache {
     }
 
     /**
-     * Removes the entry identified by 'key' from the cache.
+     * 移除一个缓存
      */
     private void removeEntry(String key) {
         CacheHeader entry = mEntries.get(key);
@@ -615,6 +612,4 @@ public class DiskBasedCache implements Cache {
         }
         return result;
     }
-
-
 }

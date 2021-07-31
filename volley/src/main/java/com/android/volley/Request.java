@@ -30,14 +30,13 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Base class for all network requests.
+ * 网络请求Request类的基类
  *
- * @param <T> The type of parsed response this request expects.
+ * @param <T> 泛型为具体响应解析时的类型
  */
 public abstract class Request<T> implements Comparable<Request<T>> {
-
     /**
-     * Default encoding for POST or PUT parameters. See {@link #getParamsEncoding()}.
+     * 默认的参数编码
      */
     private static final String DEFAULT_PARAMS_ENCODING = "UTF-8";
 
