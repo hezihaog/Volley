@@ -56,10 +56,11 @@ android {
     }
 
     packagingOptions {
-        //依赖Netty需要排除
-        pickFirst '**/*'
         //Cronet需要排除
         exclude 'META-INF/MANIFEST.MF'
+        //依赖Netty需要排除
+         exclude 'META-INF/INDEX.LIST'
+         exclude 'META-INF/io.netty.versions.properties'
     }
 
     compileOptions {
