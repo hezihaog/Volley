@@ -1,6 +1,7 @@
 package com.zh.android.volley;
 
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //创建网络适配层
-        HttpStack httpStack = new OkHttpStack();
+        HttpStack httpStack = new OkHttpStack(getApplicationContext(), true);
         //HttpStack httpStack = new AsyncHttpClientStack();
         //创建请求队列
         RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext(), httpStack);

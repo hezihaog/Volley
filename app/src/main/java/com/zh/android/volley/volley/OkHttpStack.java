@@ -1,9 +1,15 @@
 package com.zh.android.volley.volley;
 
+import android.content.Context;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.HttpStack;
+import com.google.net.cronet.okhttptransport.CronetInterceptor;
+
+import org.chromium.net.CronetEngine;
+import org.chromium.net.CronetProvider;
 
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
@@ -15,6 +21,7 @@ import cz.msebera.android.httpclient.message.BasicStatusLine;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -22,35 +29,66 @@ import java.util.concurrent.TimeUnit;
  * OkHttp实现的Volley网络层
  */
 public class OkHttpStack implements HttpStack {
+    private Context mContext;
+
+    private boolean useCronet;
+
     private OkHttpClient mOkHttpClient;
 
     /**
      * 无参构造，没有传入OkHttpClient，直接创建默认的OkHttpClient实例
      */
-    public OkHttpStack() {
-        this(createDefaultOkHttpClient());
+    public OkHttpStack(Context context, boolean useCronet) {
+        this(context, createDefaultOkHttpClient(
+                context,
+                new OkHttpClient.Builder(),
+                DefaultRetryPolicy.DEFAULT_TIMEOUT_MS,
+                useCronet)
+        );
     }
 
     /**
      * 外部传入OkHttpClient，则使用它来构建请求
      */
-    public OkHttpStack(OkHttpClient okHttpClient) {
+    public OkHttpStack(Context context, OkHttpClient okHttpClient) {
         if (okHttpClient == null) {
             throw new IllegalArgumentException("OkHttpClient can't be null");
         }
-        mOkHttpClient = okHttpClient;
+        this.mContext = context;
+        this.mOkHttpClient = okHttpClient;
     }
 
     /**
      * 创建默认的OkHttpClient
      */
-    private static OkHttpClient createDefaultOkHttpClient() {
-        int defaultTimeoutMs = DefaultRetryPolicy.DEFAULT_TIMEOUT_MS;
-        return new OkHttpClient.Builder()
-                .connectTimeout(defaultTimeoutMs, TimeUnit.MILLISECONDS)
-                .readTimeout(defaultTimeoutMs, TimeUnit.MILLISECONDS)
-                .writeTimeout(defaultTimeoutMs, TimeUnit.MILLISECONDS)
-                .build();
+    private static OkHttpClient createDefaultOkHttpClient(
+            Context context,
+            OkHttpClient.Builder clientBuilder,
+            int timeoutMs,
+            boolean useCronet) {
+        if (context == null) {
+            throw new IllegalArgumentException("context can't be null");
+        }
+        OkHttpClient.Builder builder = clientBuilder
+                .connectTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutMs, TimeUnit.MILLISECONDS);
+        //使用Cronet接替OkHttp
+        if (useCronet) {
+            boolean isInstallCronetInterceptor = false;
+            for (Interceptor interceptor : builder.getInterceptors$okhttp()) {
+                if (interceptor instanceof CronetInterceptor) {
+                    isInstallCronetInterceptor = true;
+                    break;
+                }
+            }
+            if (!isInstallCronetInterceptor) {
+                CronetEngine engine = new CronetEngine.Builder(context).build();
+                CronetInterceptor cronetInterceptor = CronetInterceptor.newBuilder(engine).build();
+                builder.addInterceptor(cronetInterceptor);
+            }
+        }
+        return builder.build();
     }
 
     @Override
@@ -61,11 +99,7 @@ public class OkHttpStack implements HttpStack {
         if (timeoutMs != mOkHttpClient.connectTimeoutMillis() &&
                 timeoutMs != mOkHttpClient.readTimeoutMillis() &&
                 timeoutMs != mOkHttpClient.writeTimeoutMillis()) {
-            client = mOkHttpClient.newBuilder()
-                    .connectTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                    .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                    .writeTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                    .build();
+            client = createDefaultOkHttpClient(mContext, mOkHttpClient.newBuilder(), timeoutMs, useCronet);
         } else {
             client = mOkHttpClient;
         }
