@@ -20,15 +20,46 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
-    buildTypes {
+    signingConfigs {
+        debug {
+            storeFile file('../key')
+            storePassword '123456'
+            keyAlias 'key'
+            keyPassword '123456'
+        }
+
         release {
+            storeFile file('../key')
+            storePassword '123456'
+            keyAlias 'key'
+            keyPassword '123456'
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    buildTypes {
+        debug {
             minifyEnabled false
+            signingConfig signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        release {
+            minifyEnabled true
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     packagingOptions {
+        //依赖Netty需要排除
         pickFirst '**/*'
+        //Cronet需要排除
+        exclude 'META-INF/MANIFEST.MF'
     }
 
     compileOptions {
