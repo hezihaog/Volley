@@ -19,10 +19,10 @@ package com.android.volley.toolbox;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 
-import org.apache.http.HttpResponse;
-
 import java.io.IOException;
 import java.util.Map;
+
+import cz.msebera.android.httpclient.HttpResponse;
 
 /**
  * Http协议栈接口
@@ -30,7 +30,7 @@ import java.util.Map;
 public interface HttpStack {
     /**
      * 使用指定参数，执行Http请求
-     *
+     * <p>
      * request.getPostBody() == null，则发送GET请求，不为null则发送POST请求
      * 并且，Content-Type请求头的取值从 request.getPostBodyContentType() 中获取
      *

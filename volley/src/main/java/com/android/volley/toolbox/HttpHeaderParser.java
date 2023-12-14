@@ -19,11 +19,11 @@ package com.android.volley.toolbox;
 import com.android.volley.Cache;
 import com.android.volley.NetworkResponse;
 
-import org.apache.http.impl.cookie.DateParseException;
-import org.apache.http.impl.cookie.DateUtils;
-import org.apache.http.protocol.HTTP;
-
 import java.util.Map;
+
+import cz.msebera.android.httpclient.client.utils.DateUtils;
+import cz.msebera.android.httpclient.impl.cookie.DateParseException;
+import cz.msebera.android.httpclient.protocol.HTTP;
 
 /**
  * Utility methods for parsing HTTP headers.
@@ -127,7 +127,7 @@ public class HttpHeaderParser {
         try {
             // Parse date in RFC1123 format if this header contains one
             return DateUtils.parseDate(dateStr).getTime();
-        } catch (DateParseException e) {
+        } catch (Exception e) {
             // Date in invalid format, fallback to 0
             return 0;
         }
@@ -136,7 +136,7 @@ public class HttpHeaderParser {
     /**
      * Retrieve a charset from headers
      *
-     * @param headers An {@link Map} of headers
+     * @param headers        An {@link Map} of headers
      * @param defaultCharset Charset to return if none can be found
      * @return Returns the charset specified in the Content-Type of this header,
      * or the defaultCharset if none can be found.
