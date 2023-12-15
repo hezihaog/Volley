@@ -61,6 +61,11 @@ public class GoHttpClientStack implements HttpStack {
         //解析响应Json为实体类
         GoClientResponse response = parseJson2GoClientResponse(responseJson);
 
+        //存在错误
+        if (!TextUtils.isEmpty(response.error)) {
+            throw new RuntimeException(response.error);
+        }
+
         //转换响应状态行
         BasicStatusLine responseStatus = new BasicStatusLine(
                 //把Go返回的网络协议，转为HttpClient的网络协议类
@@ -113,12 +118,18 @@ public class GoHttpClientStack implements HttpStack {
          */
         Map<String, ArrayList<String>> respHeaders;
 
-        public GoClientResponse(int statusCode, String bodyString, String respLine, String protocolVersion, Map<String, ArrayList<String>> respHeaders) {
+        /**
+         * 错误信息
+         */
+        String error;
+
+        public GoClientResponse(int statusCode, String bodyString, String respLine, String protocolVersion, Map<String, ArrayList<String>> respHeaders, String error) {
             this.statusCode = statusCode;
             this.bodyString = bodyString;
             this.respLine = respLine;
             this.protocolVersion = protocolVersion;
             this.respHeaders = respHeaders;
+            this.error = error;
         }
     }
 
@@ -255,7 +266,11 @@ public class GoHttpClientStack implements HttpStack {
         String respLine = String.valueOf(jsonMap.get("respLine"));
         // 协议版本
         String protocolVersion = String.valueOf(jsonMap.get("protocolVersion"));
+        // 响应头
         Map<String, ArrayList<String>> respHeaders = (Map<String, ArrayList<String>>) jsonMap.get("respHeaders");
+        // 错误信息
+        Object error = jsonMap.get("error");
+        String errorStr = error != null ? String.valueOf(error) : "";
 
         boolean invalidStatusCode = TextUtils.isEmpty(statusCode) || "null".equalsIgnoreCase(statusCode);
 
@@ -264,7 +279,8 @@ public class GoHttpClientStack implements HttpStack {
                 bodyString,
                 respLine,
                 protocolVersion,
-                respHeaders
+                respHeaders,
+                errorStr
         );
     }
 
