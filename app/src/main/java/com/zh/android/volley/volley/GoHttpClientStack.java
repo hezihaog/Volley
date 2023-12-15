@@ -77,10 +77,11 @@ public class GoHttpClientStack implements HttpStack {
         httpClientResponse.setEntity(entityFromGoHttpClientResponse(response));
 
         //响应头转换
-        Map<String, String> responseHeaders = response.respHeaders;
-        for (Map.Entry<String, String> header : responseHeaders.entrySet()) {
+        Map<String, ArrayList<String>> responseHeaders = response.respHeaders;
+        for (Map.Entry<String, ArrayList<String>> header : responseHeaders.entrySet()) {
             String name = header.getKey();
-            String value = header.getValue();
+            ArrayList<String> values = header.getValue();
+            String value = values == null || values.isEmpty() ? "" : values.get(0);
             httpClientResponse.addHeader(new BasicHeader(name, value));
         }
         return httpClientResponse;
@@ -110,9 +111,9 @@ public class GoHttpClientStack implements HttpStack {
         /**
          * 响应头
          */
-        Map<String, String> respHeaders;
+        Map<String, ArrayList<String>> respHeaders;
 
-        public GoClientResponse(int statusCode, String bodyString, String respLine, String protocolVersion, Map<String, String> respHeaders) {
+        public GoClientResponse(int statusCode, String bodyString, String respLine, String protocolVersion, Map<String, ArrayList<String>> respHeaders) {
             this.statusCode = statusCode;
             this.bodyString = bodyString;
             this.respLine = respLine;
@@ -143,21 +144,36 @@ public class GoHttpClientStack implements HttpStack {
     private static HttpEntity entityFromGoHttpClientResponse(GoClientResponse response) throws IOException {
         BasicHttpEntity entity = new BasicHttpEntity();
         InputStream responseBodyStream = strToInputStream(response.bodyString);
+
         //响应体信息
         entity.setContent(responseBodyStream);
-        Map<String, String> respHeaders = response.respHeaders;
-        String contentLengthStr = respHeaders.get("Content-Length");
-        long contentLength = TextUtils.isEmpty(contentLengthStr) ? 0 : Long.parseLong(contentLengthStr);
-        String contentEncoding = respHeaders.get("Content-Encoding");
-        String contentType = respHeaders.get("Content-Type");
+        //响应头
+        Map<String, ArrayList<String>> respHeaders = response.respHeaders;
 
+        String contentLengthStr = getResponseHeader(respHeaders, "Content-Length");
+        long contentLength = TextUtils.isEmpty(contentLengthStr) ? 0 : Long.parseLong(contentLengthStr);
         entity.setContentLength(contentLength);
+
+        String contentEncoding = getResponseHeader(respHeaders, "Content-Encoding");
         entity.setContentEncoding(contentEncoding);
+
         //Content-Type
+        String contentType = getResponseHeader(respHeaders, "Content-Type");
         if (contentType != null) {
             entity.setContentType(contentType);
         }
         return entity;
+    }
+
+    /**
+     * 获取响应头
+     */
+    private static String getResponseHeader(Map<String, ArrayList<String>> respHeaders, String key) {
+        ArrayList<String> values = respHeaders.get(key);
+        if (values == null || values.isEmpty()) {
+            return "";
+        }
+        return values.get(0);
     }
 
     /**
@@ -239,7 +255,7 @@ public class GoHttpClientStack implements HttpStack {
         String respLine = String.valueOf(jsonMap.get("respLine"));
         // 协议版本
         String protocolVersion = String.valueOf(jsonMap.get("protocolVersion"));
-        Map<String, String> respHeaders = (Map<String, String>) jsonMap.get("respHeaders");
+        Map<String, ArrayList<String>> respHeaders = (Map<String, ArrayList<String>>) jsonMap.get("respHeaders");
 
         return new GoClientResponse(
                 Integer.parseInt(statusCode),
