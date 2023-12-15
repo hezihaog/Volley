@@ -257,8 +257,10 @@ public class GoHttpClientStack implements HttpStack {
         String protocolVersion = String.valueOf(jsonMap.get("protocolVersion"));
         Map<String, ArrayList<String>> respHeaders = (Map<String, ArrayList<String>>) jsonMap.get("respHeaders");
 
+        boolean invalidStatusCode = TextUtils.isEmpty(statusCode) || "null".equalsIgnoreCase(statusCode);
+
         return new GoClientResponse(
-                Integer.parseInt(TextUtils.isEmpty(statusCode) ? "0" : statusCode),
+                Integer.parseInt(invalidStatusCode ? "0" : statusCode),
                 bodyString,
                 respLine,
                 protocolVersion,
