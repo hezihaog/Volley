@@ -1,11 +1,11 @@
 package com.zh.android.volley;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -13,7 +13,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpStack;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.zh.android.volley.volley.OkHttpStack;
+import com.zh.android.volley.volley.GoHttpClientStack;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -23,8 +23,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //创建网络适配层
-        HttpStack httpStack = new OkHttpStack(getApplicationContext(), true);
+        //HttpStack httpStack = new OkHttpStack(getApplicationContext(), true);
         //HttpStack httpStack = new AsyncHttpClientStack();
+        HttpStack httpStack = new GoHttpClientStack();
         //创建请求队列
         RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext(), httpStack);
         findViewById(R.id.request_get_btn).setOnClickListener(new View.OnClickListener() {
