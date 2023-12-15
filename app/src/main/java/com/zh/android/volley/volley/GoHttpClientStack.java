@@ -258,7 +258,7 @@ public class GoHttpClientStack implements HttpStack {
         Map<String, ArrayList<String>> respHeaders = (Map<String, ArrayList<String>>) jsonMap.get("respHeaders");
 
         return new GoClientResponse(
-                Integer.parseInt(statusCode),
+                Integer.parseInt(TextUtils.isEmpty(statusCode) ? "0" : statusCode),
                 bodyString,
                 respLine,
                 protocolVersion,
