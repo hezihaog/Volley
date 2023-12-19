@@ -9,7 +9,10 @@ import com.android.volley.toolbox.HttpStack;
 import com.google.net.cronet.okhttptransport.CronetInterceptor;
 
 import org.chromium.net.CronetEngine;
-import org.chromium.net.CronetProvider;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
@@ -18,18 +21,21 @@ import cz.msebera.android.httpclient.entity.BasicHttpEntity;
 import cz.msebera.android.httpclient.message.BasicHeader;
 import cz.msebera.android.httpclient.message.BasicHttpResponse;
 import cz.msebera.android.httpclient.message.BasicStatusLine;
-import okhttp3.*;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import okhttp3.Call;
+import okhttp3.Headers;
+import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * OkHttp实现的Volley网络层
  */
 public class OkHttpStack implements HttpStack {
-    private Context mContext;
+    private final Context mContext;
 
     private boolean useCronet;
 
@@ -45,6 +51,7 @@ public class OkHttpStack implements HttpStack {
                 DefaultRetryPolicy.DEFAULT_TIMEOUT_MS,
                 useCronet)
         );
+        this.useCronet = useCronet;
     }
 
     /**
