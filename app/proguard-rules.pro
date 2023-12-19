@@ -77,8 +77,8 @@
 }
 
 #业务实体不做混淆，避免gson解析错误
--dontwarn com.grandstream.convergentconference.entity.**
--keep class com.grandstream.convergentconference.entity.** { *;}
+-dontwarn com.zh.android.volley.model.**
+-keep class com.zh.android.volley.model.** { *;}
 
 #Rxjava、RxAndroid，官方ReadMe文档中说明无需特殊配置
 -dontwarn java.util.concurrent.Flow*
