@@ -77,9 +77,23 @@ dependencies {
 
     api project(path: ':volley')
     implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 
     implementation 'androidx.multidex:multidex:2.0.1'
+
+    //Gson
+    implementation 'com.google.code.gson:gson:2.8.5'
+    //FastJson
+    api 'com.alibaba:fastjson:1.2.76'
+    //Jackson
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+
+    implementation 'me.drakeet.multitype:multitype:3.5.0'
+
+    //如果服务端返回的json有特殊字符，比如中文的双引号，gson在解析的时候会对特殊字符进行转义
+    //这时就需要将转义后的字符串进行反转义，commons-lang可以对特殊字符进行转义和反转义
+    api 'commons-lang:commons-lang:2.6'
 
     //OkHttp4
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
