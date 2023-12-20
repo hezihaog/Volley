@@ -163,8 +163,10 @@ public class HomeActivity extends AppCompatActivity {
         Type type = new TypeToken<HomeArticleModel>() {
         }.getType();
 
+        long startTime = System.currentTimeMillis();
+
         //创建请求，设置回调
-        Request<HomeArticleModel> request = new JacksonRequest<>(url, type, new Response.Listener<HomeArticleModel>() {
+        Request<HomeArticleModel> request = new JacksonRequest<HomeArticleModel>(url, type, new Response.Listener<HomeArticleModel>() {
             @Override
             public void onResponse(HomeArticleModel response) {
                 processResult(response, isRefresh);
@@ -175,7 +177,14 @@ public class HomeActivity extends AppCompatActivity {
                 error.printStackTrace();
                 ToastUtil.toast(getApplicationContext(), "请求失败：" + error.getMessage());
             }
-        });
+        }) {
+            @Override
+            protected void onFinish() {
+                super.onFinish();
+                long endTime = System.currentTimeMillis();
+                ToastUtil.toast(getApplicationContext(), "完成耗时：" + (endTime - startTime) + "ms");
+            }
+        };
         //加入队列，发起请求
         mRequestQueue.add(request);
     }
