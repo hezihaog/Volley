@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,6 +44,7 @@ public class HomeActivity extends AppCompatActivity {
     public static final int TYPE_ASYNC_HTTP_CLIENT = 4;
     public static final int TYPE_GO_HTTP_CLIENT = 5;
 
+    private Toolbar vToolbar;
     private RecyclerView vList;
     private final List<HomeArticleModel.PageModel.ItemModel> mListData = new ArrayList<>();
     private final MultiTypeAdapter mListAdapter = new MultiTypeAdapter(mListData);
@@ -85,10 +87,15 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void findView() {
+        vToolbar = findViewById(R.id.tool_bar);
         vList = findViewById(R.id.list);
     }
 
     private void bindView() {
+        //标题栏
+        setSupportActionBar(vToolbar);
+        vToolbar.setNavigationIcon(R.drawable.ic_action_back);
+        vToolbar.setNavigationOnClickListener(view -> finish());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         vList.setLayoutManager(layoutManager);
         //设置适配器

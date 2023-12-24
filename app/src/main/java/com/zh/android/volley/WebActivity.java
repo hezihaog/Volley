@@ -9,13 +9,16 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.zh.android.volley.util.ToastUtil;
 
 /**
  * WebView页面
  */
-public class WebActivity extends Activity {
+public class WebActivity extends AppCompatActivity {
+    private Toolbar vToolbar;
     private WebView vWebView;
 
     public static void start(Activity activity, String link) {
@@ -43,11 +46,17 @@ public class WebActivity extends Activity {
     }
 
     private void findView() {
+        vToolbar = findViewById(R.id.tool_bar);
         vWebView = findViewById(R.id.web_view);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private void bindView() {
+        //标题栏
+        setSupportActionBar(vToolbar);
+        vToolbar.setNavigationIcon(R.drawable.ic_action_back);
+        vToolbar.setNavigationOnClickListener(view -> finish());
+        //WebView
         vWebView.getSettings().setJavaScriptEnabled(true);
         vWebView.setWebViewClient(new WebViewClient() {
             @Override
