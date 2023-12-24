@@ -63,7 +63,7 @@ public class GoHttpClientStack implements HttpStack {
 
         //存在错误
         if (!TextUtils.isEmpty(response.error)) {
-            throw new RuntimeException(response.error);
+            throw new IOException(response.error);
         }
 
         //转换响应状态行
