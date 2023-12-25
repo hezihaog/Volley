@@ -3,7 +3,9 @@ package com.zh.android.volley;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +14,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.alibaba.fastjson.JSONObject;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -22,6 +25,7 @@ import com.android.volley.toolbox.Volley;
 import com.google.common.reflect.TypeToken;
 import com.zh.android.volley.item.HomeArticleItemViewBinder;
 import com.zh.android.volley.model.HomeArticleModel;
+import com.zh.android.volley.util.GoSharedPreferences;
 import com.zh.android.volley.util.ToastUtil;
 import com.zh.android.volley.volley.AsyncHttpClientStack;
 import com.zh.android.volley.volley.GoHttpClientStack;
@@ -37,6 +41,11 @@ import me.drakeet.multitype.MultiTypeAdapter;
 
 public class HomeActivity extends AppCompatActivity {
     public static final String KEY_TYPE = "KEY_TYPE";
+
+    /**
+     * 缓存Key前置
+     */
+    private static final String KEY_CACHE_LIST_PREV = "cache_list_";
 
     public static final int TYPE_HTTP_URL_CONNECTION = 1;
     public static final int TYPE_HTTP_CLIENT = 2;
@@ -170,6 +179,14 @@ public class HomeActivity extends AppCompatActivity {
         Type type = new TypeToken<HomeArticleModel>() {
         }.getType();
 
+        //优先从缓存中获取
+        String json = GoSharedPreferences.getInstance().getString(KEY_CACHE_LIST_PREV + page, "");
+        if (!TextUtils.isEmpty(json)) {
+            HomeArticleModel response = JSONObject.parseObject(json, HomeArticleModel.class);
+            processResult(response, isRefresh);
+            return;
+        }
+
         long startTime = System.currentTimeMillis();
 
         //创建请求，设置回调
@@ -177,6 +194,11 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onResponse(HomeArticleModel response) {
                 processResult(response, isRefresh);
+
+                // 缓存数据到内存中
+                SharedPreferences.Editor editor = GoSharedPreferences.getInstance().edit();
+                editor.putString(KEY_CACHE_LIST_PREV + page, JSONObject.toJSONString(response));
+                editor.apply();
             }
         }, new Response.ErrorListener() {
             @Override
