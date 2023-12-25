@@ -23,6 +23,10 @@ import com.android.volley.toolbox.HttpClientStack;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.Volley;
 import com.google.common.reflect.TypeToken;
+import com.scwang.smart.refresh.layout.SmartRefreshLayout;
+import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 import com.zh.android.volley.item.HomeArticleItemViewBinder;
 import com.zh.android.volley.model.HomeArticleModel;
 import com.zh.android.volley.util.GoSharedPreferences;
@@ -54,6 +58,7 @@ public class HomeActivity extends AppCompatActivity {
     public static final int TYPE_GO_HTTP_CLIENT = 5;
 
     private Toolbar vToolbar;
+    private SmartRefreshLayout vRefreshLayout;
     private RecyclerView vList;
     private final List<HomeArticleModel.PageModel.ItemModel> mListData = new ArrayList<>();
     private final MultiTypeAdapter mListAdapter = new MultiTypeAdapter(mListData);
@@ -66,10 +71,6 @@ public class HomeActivity extends AppCompatActivity {
      * 当前页码
      */
     private int mCurrentPage;
-    /**
-     * 是否有下一页
-     */
-    private boolean hasMore = true;
 
     public static void start(Activity activity, int type) {
         Intent intent = new Intent(activity, HomeActivity.class);
@@ -97,6 +98,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void findView() {
         vToolbar = findViewById(R.id.tool_bar);
+        vRefreshLayout = findViewById(R.id.refresh_layout);
         vList = findViewById(R.id.list);
     }
 
@@ -105,8 +107,7 @@ public class HomeActivity extends AppCompatActivity {
         setSupportActionBar(vToolbar);
         vToolbar.setNavigationIcon(R.drawable.ic_action_back);
         vToolbar.setNavigationOnClickListener(view -> finish());
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
-        vList.setLayoutManager(layoutManager);
+        vList.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         //设置适配器
         vList.setAdapter(mListAdapter);
         //注册条目类型
@@ -121,20 +122,18 @@ public class HomeActivity extends AppCompatActivity {
                         WebActivity.start(HomeActivity.this, link);
                     }
                 }));
-        //设置滚动监听，滚动结束后回调
-        vList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        //下拉刷新
+        vRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                //没有下一页
-                if (!hasMore) {
-                    return;
-                }
-                int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
-                if (lastVisibleItemPosition == mListData.size() - 1) {
-                    //加载更多
-                    loadMore();
-                }
+            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+                refresh();
+            }
+        });
+        //加载更多
+        vRefreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
+            @Override
+            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+                loadMore();
             }
         });
     }
@@ -182,7 +181,9 @@ public class HomeActivity extends AppCompatActivity {
         //优先从缓存中获取
         String json = GoSharedPreferences.getInstance().getString(KEY_CACHE_LIST_PREV + page, "");
         if (!TextUtils.isEmpty(json)) {
-            HomeArticleModel response = JSONObject.parseObject(json, HomeArticleModel.class);
+            finishRefreshOrLoadMore(isRefresh);
+
+            HomeArticleModel response = JSONObject.parseObject(json, type);
             processResult(response, isRefresh);
             return;
         }
@@ -193,12 +194,12 @@ public class HomeActivity extends AppCompatActivity {
         Request<HomeArticleModel> request = new JacksonRequest<HomeArticleModel>(url, type, new Response.Listener<HomeArticleModel>() {
             @Override
             public void onResponse(HomeArticleModel response) {
-                processResult(response, isRefresh);
-
-                // 缓存数据到内存中
+                //缓存数据到内存中
                 SharedPreferences.Editor editor = GoSharedPreferences.getInstance().edit();
                 editor.putString(KEY_CACHE_LIST_PREV + page, JSONObject.toJSONString(response));
                 editor.apply();
+                //渲染页面
+                processResult(response, isRefresh);
             }
         }, new Response.ErrorListener() {
             @Override
@@ -212,10 +213,22 @@ public class HomeActivity extends AppCompatActivity {
                 super.onFinish();
                 long endTime = System.currentTimeMillis();
                 ToastUtil.toast(getApplicationContext(), "完成耗时：" + (endTime - startTime) + "ms");
+                finishRefreshOrLoadMore(isRefresh);
             }
         };
         //加入队列，发起请求
         mRequestQueue.add(request);
+    }
+
+    /**
+     * 结束下拉刷新或加载更多
+     */
+    private void finishRefreshOrLoadMore(boolean isRefresh) {
+        if (isRefresh) {
+            vRefreshLayout.finishRefresh();
+        } else {
+            vRefreshLayout.finishLoadMore();
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -230,8 +243,10 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             list = new ArrayList<>();
         }
-        //是否有下一页
-        hasMore = !pageModel.isOver();
+        //没有下一页了
+        if (pageModel.isOver()) {
+            vRefreshLayout.finishLoadMoreWithNoMoreData();
+        }
         //更新当前页码
         mCurrentPage = pageModel.getOffset();
         if (isRefresh) {
