@@ -34,7 +34,7 @@ import com.zh.android.volley.util.ToastUtil;
 import com.zh.android.volley.volley.AsyncHttpClientStack;
 import com.zh.android.volley.volley.GoHttpClientStack;
 import com.zh.android.volley.volley.OkHttpStack;
-import com.zh.android.volley.volley.request.JacksonRequest;
+import com.zh.android.volley.volley.request.FastJsonRequest;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -193,7 +193,7 @@ public class HomeActivity extends AppCompatActivity {
         long startTime = System.currentTimeMillis();
 
         //创建请求，设置回调
-        Request<HomeArticleModel> request = new JacksonRequest<HomeArticleModel>(url, type, new Response.Listener<HomeArticleModel>() {
+        Request<HomeArticleModel> request = new FastJsonRequest<HomeArticleModel>(url, type, new Response.Listener<HomeArticleModel>() {
             @Override
             public void onResponse(HomeArticleModel response) {
                 //缓存数据到内存中
