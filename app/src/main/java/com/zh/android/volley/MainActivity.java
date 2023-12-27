@@ -6,11 +6,23 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.alibaba.fastjson.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import app.App;
+
 public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        bindView();
+        setData();
+    }
+
+    private void bindView() {
         //标题栏
         Toolbar toolbar = findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
@@ -49,5 +61,13 @@ public class MainActivity extends AppCompatActivity {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_GO_HTTP_CLIENT);
             }
         });
+    }
+
+    private void setData() {
+        Map<String, String> map = new HashMap<>();
+        map.put("name", "Wally");
+        map.put("age", "18");
+        map.put("sex", "男");
+        App.startHttpServer(8080, "/", JSONObject.toJSONString(map));
     }
 }
