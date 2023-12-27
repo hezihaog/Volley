@@ -45,9 +45,11 @@ public class GoSharedPreferences implements SharedPreferences {
 
     /**
      * 获取数据库文件的存放目录
+     *
+     * @param databaseFileDirName 数据库文件目录名
      */
-    private static String getDatabasePath(String databaseFileName) {
-        return ContextUtil.getContext().getDatabasePath(databaseFileName).getAbsolutePath();
+    private static String getDatabasePath(String databaseFileDirName) {
+        return ContextUtil.getContext().getDatabasePath(databaseFileDirName).getAbsolutePath();
     }
 
     @Override
