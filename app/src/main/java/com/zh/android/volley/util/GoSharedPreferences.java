@@ -29,13 +29,13 @@ public class GoSharedPreferences implements SharedPreferences {
     }
 
     static {
-        String baseDir = getBaseDir();
+        //获取数据库文件存放目录
+        String dbPath = getDatabasePath("preferences");
         //创建存储数据库文件的文件夹
-        File dirFile = new File(baseDir, "db");
-        if (!dirFile.exists()) {
-            dirFile.mkdirs();
+        File dbFile = new File(dbPath);
+        if (!dbFile.exists()) {
+            dbFile.mkdirs();
         }
-        String dbPath = dirFile.getAbsolutePath();
         App.setDbPath(dbPath);
     }
 
@@ -44,10 +44,10 @@ public class GoSharedPreferences implements SharedPreferences {
     }
 
     /**
-     * 获取存储上传文件的目录路径
+     * 获取数据库文件的存放目录
      */
-    private static String getBaseDir() {
-        return ContextUtil.getContext().getExternalCacheDir().getAbsolutePath();
+    private static String getDatabasePath(String databaseFileName) {
+        return ContextUtil.getContext().getDatabasePath(databaseFileName).getAbsolutePath();
     }
 
     @Override
