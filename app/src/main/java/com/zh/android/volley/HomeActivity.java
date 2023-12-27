@@ -72,6 +72,8 @@ public class HomeActivity extends AppCompatActivity {
      */
     private int mCurrentPage;
 
+    private final GoSharedPreferences mGoSharedPreferences = GoSharedPreferences.getInstance();
+
     public static void start(Activity activity, int type) {
         Intent intent = new Intent(activity, HomeActivity.class);
         intent.putExtra(HomeActivity.KEY_TYPE, type);
@@ -94,6 +96,7 @@ public class HomeActivity extends AppCompatActivity {
         if (mRequestQueue != null) {
             mRequestQueue.stop();
         }
+        mGoSharedPreferences.edit().clear().apply();
     }
 
     private void findView() {
@@ -179,10 +182,9 @@ public class HomeActivity extends AppCompatActivity {
         }.getType();
 
         //优先从缓存中获取
-        String json = GoSharedPreferences.getInstance().getString(KEY_CACHE_LIST_PREV + page, "");
+        String json = mGoSharedPreferences.getString(KEY_CACHE_LIST_PREV + page, "");
         if (!TextUtils.isEmpty(json)) {
             finishRefreshOrLoadMore(isRefresh);
-
             HomeArticleModel response = JSONObject.parseObject(json, type);
             processResult(response, isRefresh);
             return;
@@ -195,7 +197,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onResponse(HomeArticleModel response) {
                 //缓存数据到内存中
-                SharedPreferences.Editor editor = GoSharedPreferences.getInstance().edit();
+                SharedPreferences.Editor editor = mGoSharedPreferences.edit();
                 editor.putString(KEY_CACHE_LIST_PREV + page, JSONObject.toJSONString(response));
                 editor.apply();
                 //渲染页面

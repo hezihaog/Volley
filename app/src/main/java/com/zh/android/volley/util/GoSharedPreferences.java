@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +28,26 @@ public class GoSharedPreferences implements SharedPreferences {
         private static final GoSharedPreferences instance = new GoSharedPreferences();
     }
 
+    static {
+        String baseDir = getBaseDir();
+        //创建存储数据库文件的文件夹
+        File dirFile = new File(baseDir, "db");
+        if (!dirFile.exists()) {
+            dirFile.mkdirs();
+        }
+        String dbPath = dirFile.getAbsolutePath();
+        App.setDbPath(dbPath);
+    }
+
     public static GoSharedPreferences getInstance() {
         return SingleHolder.instance;
+    }
+
+    /**
+     * 获取存储上传文件的目录路径
+     */
+    private static String getBaseDir() {
+        return ContextUtil.getContext().getExternalCacheDir().getAbsolutePath();
     }
 
     @Override
@@ -197,7 +216,7 @@ public class GoSharedPreferences implements SharedPreferences {
          */
         private void putByString(String key, Object value) {
             //重新插入
-            App.setCacheData(key, String.valueOf(value), -1);
+            App.setCacheData(key, String.valueOf(value));
             for (OnSharedPreferenceChangeListener listener : mOnChangeListeners) {
                 listener.onSharedPreferenceChanged(mSharedPreferences, key);
             }
