@@ -3,12 +3,15 @@ package com.zh.android.volley.util;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -36,7 +39,7 @@ public class GoSharedPreferences implements SharedPreferences {
         if (!dbFile.exists()) {
             dbFile.mkdirs();
         }
-        App.setDbPath(dbPath);
+        App.setDiskCacheDir(dbPath);
     }
 
     public static GoSharedPreferences getInstance() {
@@ -54,7 +57,7 @@ public class GoSharedPreferences implements SharedPreferences {
 
     @Override
     public Map<String, ?> getAll() {
-        String allCacheDataJson = App.getAllCacheData();
+        String allCacheDataJson = App.getAllDiskCache();
         if (TextUtils.isEmpty(allCacheDataJson)) {
             return new HashMap<>();
         }
@@ -68,7 +71,7 @@ public class GoSharedPreferences implements SharedPreferences {
     @Override
     public String getString(String key, String defValue) {
         String value = getByKey(key);
-        if (value == null) {
+        if (TextUtils.isEmpty(value)) {
             return defValue;
         }
         return value;
@@ -76,13 +79,17 @@ public class GoSharedPreferences implements SharedPreferences {
 
     @Override
     public Set<String> getStringSet(String key, Set<String> defValues) {
-        throw new RuntimeException("不支持该功能");
+        String value = getByKey(key);
+        if (TextUtils.isEmpty(value)) {
+            return defValues;
+        }
+        return new HashSet<>(JSONArray.parseArray(value, String.class));
     }
 
     @Override
     public int getInt(String key, int defValue) {
         String value = getByKey(key);
-        if (value == null) {
+        if (TextUtils.isEmpty(value)) {
             return defValue;
         }
         return Integer.parseInt(value);
@@ -91,7 +98,7 @@ public class GoSharedPreferences implements SharedPreferences {
     @Override
     public long getLong(String key, long defValue) {
         String value = getByKey(key);
-        if (value == null) {
+        if (TextUtils.isEmpty(value)) {
             return defValue;
         }
         return Long.parseLong(value);
@@ -129,7 +136,7 @@ public class GoSharedPreferences implements SharedPreferences {
         if (key == null) {
             return null;
         }
-        return App.getCacheData(key);
+        return App.getDiskCache(key);
     }
 
     @Override
@@ -164,7 +171,7 @@ public class GoSharedPreferences implements SharedPreferences {
 
         @Override
         public Editor putStringSet(String key, Set<String> value) {
-            putByString(key, value);
+            putByString(key, JSON.toJSONString(value));
             return this;
         }
 
@@ -194,13 +201,13 @@ public class GoSharedPreferences implements SharedPreferences {
 
         @Override
         public Editor remove(String key) {
-            App.deleteCacheData(key);
+            App.deleteDiskCache(key);
             return this;
         }
 
         @Override
         public Editor clear() {
-            App.deleteAllCacheData();
+            App.clearDiskCache();
             return this;
         }
 
