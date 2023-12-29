@@ -77,6 +77,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startWebSocketServer() {
-        App.startWebSocketServer(9001);
+        App.startWebSocketServer(9001, "/ws", "");
     }
 }

@@ -13,8 +13,8 @@ android {
         namespace "com.zh.android.volley"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
+        versionCode 101
+        versionName "1.0.1"
 
         multiDexEnabled true
 
