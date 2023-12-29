@@ -57,10 +57,20 @@ public class GoSharedPreferences implements SharedPreferences {
 
     @Override
     public Map<String, ?> getAll() {
-        String allCacheDataJson = App.getAllDiskCache();
-        if (TextUtils.isEmpty(allCacheDataJson)) {
+        //如果内存缓存中有，则使用内存缓存
+        String allMemoryCacheJson = App.getAllMemoryCache();
+        if (!TextUtils.isEmpty(allMemoryCacheJson)) {
+            return parseAllData(allMemoryCacheJson);
+        }
+        //没有则使用磁盘缓存
+        String allDiskCacheJson = App.getAllDiskCache();
+        if (TextUtils.isEmpty(allDiskCacheJson)) {
             return new HashMap<>();
         }
+        return parseAllData(allDiskCacheJson);
+    }
+
+    private Map<String, ?> parseAllData(String allCacheDataJson) {
         //解析json为Map
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, Object>>() {
@@ -136,7 +146,8 @@ public class GoSharedPreferences implements SharedPreferences {
         if (key == null) {
             return null;
         }
-        return App.getDiskCache(key);
+        String value = App.getMemoryCache(key);
+        return !TextUtils.isEmpty(value) ? value : App.getDiskCache(key);
     }
 
     @Override
@@ -201,12 +212,14 @@ public class GoSharedPreferences implements SharedPreferences {
 
         @Override
         public Editor remove(String key) {
+            App.deleteMemoryCache(key);
             App.deleteDiskCache(key);
             return this;
         }
 
         @Override
         public Editor clear() {
+            App.clearMemoryCache();
             App.clearDiskCache();
             return this;
         }
@@ -224,8 +237,13 @@ public class GoSharedPreferences implements SharedPreferences {
          * 存储统一用字符串
          */
         private void putByString(String key, Object value) {
-            //重新插入
-            App.setCacheData(key, String.valueOf(value));
+            String valueStr = String.valueOf(value);
+
+            //内存缓存
+            App.setMemoryCache(key, valueStr, -1);
+            //磁盘缓存
+            App.setCacheData(key, valueStr);
+
             for (OnSharedPreferenceChangeListener listener : mOnChangeListeners) {
                 listener.onSharedPreferenceChanged(mSharedPreferences, key);
             }
