@@ -242,7 +242,7 @@ public class GoSharedPreferences implements SharedPreferences {
             //内存缓存
             App.setMemoryCache(key, valueStr, -1);
             //磁盘缓存
-            App.setCacheData(key, valueStr);
+            App.setDiskCache(key, valueStr);
 
             for (OnSharedPreferenceChangeListener listener : mOnChangeListeners) {
                 listener.onSharedPreferenceChanged(mSharedPreferences, key);
