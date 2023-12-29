@@ -64,10 +64,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setData() {
+        startHttpServer();
+        startWebSocketServer();
+    }
+
+    private void startHttpServer() {
         Map<String, String> map = new HashMap<>();
         map.put("name", "Wally");
         map.put("age", "18");
         map.put("sex", "男");
         App.startHttpServer(8080, "/", JSONObject.toJSONString(map));
+    }
+
+    private void startWebSocketServer() {
+        App.startWebSocketServer(9001);
     }
 }
