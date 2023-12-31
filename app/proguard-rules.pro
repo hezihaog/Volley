@@ -76,6 +76,14 @@
     void *(**on*Changed);
 }
 
+# 不混淆AsyncHttpClient
+-keep class org.asynchttpclient.** { *; }
+-dontwarn org.asynchttpclient.**
+
+# 不混淆netty
+-keep class io.netty.** { *; }
+-dontwarn io.netty.**
+
 #业务实体不做混淆，避免gson解析错误
 -dontwarn com.zh.android.volley.model.**
 -keep class com.zh.android.volley.model.** { *;}
