@@ -6,11 +6,6 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.alibaba.fastjson.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import app.App;
 
 public class MainActivity extends AppCompatActivity {
@@ -64,16 +59,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setData() {
-        startHttpServer();
+        startFileHttpServer();
         startWebSocketServer();
     }
 
-    private void startHttpServer() {
-        Map<String, String> map = new HashMap<>();
-        map.put("name", "Wally");
-        map.put("age", "18");
-        map.put("sex", "男");
-        App.startHttpServer(8080, "/", JSONObject.toJSONString(map));
+    private void startFileHttpServer() {
+        App.configFileUploadDir(getApplication().getExternalCacheDir().getAbsolutePath());
+        App.startFileHttpServer(8080);
     }
 
     private void startWebSocketServer() {

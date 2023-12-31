@@ -39,7 +39,7 @@ public class GoSharedPreferences implements SharedPreferences {
         if (!dbFile.exists()) {
             dbFile.mkdirs();
         }
-        App.setDiskCacheDir(dbPath);
+        App.configDiskCacheDir(dbPath);
     }
 
     public static GoSharedPreferences getInstance() {
