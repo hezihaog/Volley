@@ -6,6 +6,8 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import java.io.File;
+
 import app.App;
 
 public class MainActivity extends AppCompatActivity {
@@ -64,7 +66,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startFileHttpServer() {
+        //获取数据库文件存放目录
+        String dbPath = getDatabasePath("file").getAbsolutePath();
+        //创建存储数据库文件的文件夹
+        File dbFile = new File(dbPath);
+        if (!dbFile.exists()) {
+            dbFile.mkdirs();
+        }
+        //配置文件上传历史记录数据库
+        App.configFileUploadHistoryDir(dbFile.getAbsolutePath());
+        //配置文件上传的文件存储目录
         App.configFileUploadDir(getApplication().getExternalCacheDir().getAbsolutePath());
+        //启动文件服务
         App.startFileHttpServer(8080);
     }
 
