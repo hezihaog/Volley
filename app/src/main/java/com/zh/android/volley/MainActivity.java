@@ -7,8 +7,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.zh.android.volley.util.AssetUtils;
+import com.zh.android.volley.util.ToastUtil;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import app.App;
 
@@ -65,6 +68,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_GO_HTTP_CLIENT);
+            }
+        });
+        findViewById(R.id.close_all_server_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                List<Integer> ports = Arrays.asList(8181, 8080, 9001);
+                for (Integer port : ports) {
+                    App.stopServer(port);
+                }
+                ToastUtil.toast(getApplicationContext(), "关闭所有服务成功");
             }
         });
     }
