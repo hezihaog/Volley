@@ -6,6 +6,8 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.zh.android.volley.util.AssetUtils;
+
 import java.io.File;
 
 import app.App;
@@ -61,8 +63,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setData() {
+        startHttpServer();
         startFileHttpServer();
         startWebSocketServer();
+    }
+
+    private void startHttpServer() {
+        //网站的根目录文件夹名称
+        String websiteDirName = "web";
+        //拷贝到的外部文件夹路径
+        String outDirPath = new File(
+                getApplicationContext().getExternalCacheDir().getAbsolutePath(),
+                websiteDirName
+        ).getAbsolutePath();
+        //开始拷贝
+        AssetUtils.copyFilesFromAssets(
+                getApplicationContext(),
+                websiteDirName,
+                outDirPath
+        );
+        App.startHttpServer(8181, "/", outDirPath, outDirPath + "/static", "index.html");
     }
 
     private void startFileHttpServer() {
