@@ -46,6 +46,13 @@ public class MainActivity extends AppCompatActivity {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_OKHTTP);
             }
         });
+        findViewById(R.id.get_request_okhttp_btn).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                HomeActivity.start(MainActivity.this, HomeActivity.TYPE_OKHTTP_WITH_CRONET);
+                return true;
+            }
+        });
         //AsyncHttpClient实现
         findViewById(R.id.get_request_async_http_client_btn).setOnClickListener(new View.OnClickListener() {
             @Override

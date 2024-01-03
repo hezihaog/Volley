@@ -54,8 +54,9 @@ public class HomeActivity extends AppCompatActivity {
     public static final int TYPE_HTTP_URL_CONNECTION = 1;
     public static final int TYPE_HTTP_CLIENT = 2;
     public static final int TYPE_OKHTTP = 3;
-    public static final int TYPE_ASYNC_HTTP_CLIENT = 4;
-    public static final int TYPE_GO_HTTP_CLIENT = 5;
+    public static final int TYPE_OKHTTP_WITH_CRONET = 4;
+    public static final int TYPE_ASYNC_HTTP_CLIENT = 5;
+    public static final int TYPE_GO_HTTP_CLIENT = 6;
 
     private Toolbar vToolbar;
     private SmartRefreshLayout vRefreshLayout;
@@ -149,6 +150,8 @@ public class HomeActivity extends AppCompatActivity {
         } else if (type == TYPE_HTTP_CLIENT) {
             mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HttpClientStack(new DefaultHttpClient()));
         } else if (type == TYPE_OKHTTP) {
+            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new OkHttpStack(getApplicationContext(), false));
+        } else if (type == TYPE_OKHTTP_WITH_CRONET) {
             mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new OkHttpStack(getApplicationContext(), true));
         } else if (type == TYPE_ASYNC_HTTP_CLIENT) {
             mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new AsyncHttpClientStack());
