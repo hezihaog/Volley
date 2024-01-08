@@ -70,22 +70,28 @@ public class MainActivity extends AppCompatActivity {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_GO_HTTP_CLIENT);
             }
         });
-        findViewById(R.id.close_all_server_btn).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.start_all_web_server_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startHttpServer();
+                startFileHttpServer();
+                startWebSocketServer();
+                ToastUtil.toast(getApplicationContext(), "启动所有Web服务成功");
+            }
+        });
+        findViewById(R.id.close_all_web_server_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 List<Integer> ports = Arrays.asList(8181, 8080, 9001);
                 for (Integer port : ports) {
                     App.stopServer(port);
                 }
-                ToastUtil.toast(getApplicationContext(), "关闭所有服务成功");
+                ToastUtil.toast(getApplicationContext(), "关闭所有Web服务成功");
             }
         });
     }
 
     private void setData() {
-        startHttpServer();
-        startFileHttpServer();
-        startWebSocketServer();
     }
 
     private void startHttpServer() {
