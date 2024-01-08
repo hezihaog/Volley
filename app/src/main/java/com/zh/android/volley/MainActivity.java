@@ -82,7 +82,11 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.close_all_web_server_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                List<Integer> ports = Arrays.asList(8181, 8080, 9001);
+                List<Integer> ports = Arrays.asList(
+                        Constant.HTTP_SERVER_PORT,
+                        Constant.FILE_HTTP_SERVER_PORT,
+                        Constant.WEB_SOCKET_SERVER_PORT
+                );
                 for (Integer port : ports) {
                     App.stopServer(port);
                 }
@@ -108,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 websiteDirName,
                 outDirPath
         );
-        App.startHttpServer(8181, "/", outDirPath, outDirPath + "/static", "index.html");
+        App.startHttpServer(Constant.HTTP_SERVER_PORT, "/", outDirPath, outDirPath + "/static", "index.html");
     }
 
     private void startFileHttpServer() {
@@ -124,10 +128,10 @@ public class MainActivity extends AppCompatActivity {
         //配置文件上传的文件存储目录
         App.configFileUploadDir(getApplication().getExternalCacheDir().getAbsolutePath());
         //启动文件服务
-        App.startFileHttpServer(8080);
+        App.startFileHttpServer(Constant.FILE_HTTP_SERVER_PORT);
     }
 
     private void startWebSocketServer() {
-        App.startWebSocketServer(9001, "/ws", "");
+        App.startWebSocketServer(Constant.WEB_SOCKET_SERVER_PORT, "/ws", "");
     }
 }
