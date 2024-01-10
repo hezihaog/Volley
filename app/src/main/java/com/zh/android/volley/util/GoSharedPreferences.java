@@ -129,7 +129,7 @@ public class GoSharedPreferences implements SharedPreferences {
         if (value == null) {
             return defValue;
         }
-        return Boolean.getBoolean(value);
+        return Boolean.parseBoolean(value);
     }
 
     @Override
