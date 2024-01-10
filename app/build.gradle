@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId "com.zh.android.volley"
         namespace "com.zh.android.volley"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 30
         versionCode 105
         versionName "1.0.5"
@@ -111,6 +111,8 @@ dependencies {
     implementation 'org.chromium.net:cronet-embedded:101.4951.41'
     //Google Cronet OkHttp拦截器
     implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
+
+    implementation("io.maryk.rocksdb:rocksdb-android:8.8.1")
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
