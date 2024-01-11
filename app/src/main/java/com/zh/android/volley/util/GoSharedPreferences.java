@@ -32,14 +32,23 @@ public class GoSharedPreferences implements SharedPreferences {
     }
 
     static {
+        configCacheDir();
+    }
+
+    private static void configCacheDir() {
+        App.configMemoryCacheDir(initCacheDir("memory_cache_preferences"));
+        App.configDiskCacheDir(initCacheDir("disk_cache_preferences"));
+    }
+
+    private static String initCacheDir(String dbFileName) {
         //获取数据库文件存放目录
-        String dbPath = getDatabasePath("preferences");
+        String dbPath = getDatabasePath(dbFileName);
         //创建存储数据库文件的文件夹
         File dbFile = new File(dbPath);
         if (!dbFile.exists()) {
             dbFile.mkdirs();
         }
-        App.configDiskCacheDir(dbPath);
+        return dbPath;
     }
 
     public static GoSharedPreferences getInstance() {

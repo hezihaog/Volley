@@ -29,7 +29,7 @@ import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 import com.zh.android.volley.item.HomeArticleItemViewBinder;
 import com.zh.android.volley.model.HomeArticleModel;
-import com.zh.android.volley.util.RocksDBSharedPreferences;
+import com.zh.android.volley.util.GoSharedPreferences;
 import com.zh.android.volley.util.ToastUtil;
 import com.zh.android.volley.volley.AsyncHttpClientStack;
 import com.zh.android.volley.volley.GoHttpClientStack;
@@ -73,7 +73,7 @@ public class HomeActivity extends AppCompatActivity {
      */
     private int mCurrentPage;
 
-    private final SharedPreferences mGoSharedPreferences = RocksDBSharedPreferences.getInstance();
+    private final SharedPreferences mGoSharedPreferences = GoSharedPreferences.getInstance();
 
     public static void start(Activity activity, int type) {
         Intent intent = new Intent(activity, HomeActivity.class);
