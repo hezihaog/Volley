@@ -36,8 +36,7 @@ public class GoSharedPreferences implements SharedPreferences {
     }
 
     private static void configCacheDir() {
-        App.configMemoryCacheDir(initCacheDir("memory_cache_preferences"));
-        App.configDiskCacheDir(initCacheDir("disk_cache_preferences"));
+        App.configMemoryCacheDir(initCacheDir("preferences"));
     }
 
     private static String initCacheDir(String dbFileName) {
@@ -71,12 +70,7 @@ public class GoSharedPreferences implements SharedPreferences {
         if (!TextUtils.isEmpty(allMemoryCacheJson)) {
             return parseAllData(allMemoryCacheJson);
         }
-        //没有则使用磁盘缓存
-        String allDiskCacheJson = App.getAllDiskCache();
-        if (TextUtils.isEmpty(allDiskCacheJson)) {
-            return new HashMap<>();
-        }
-        return parseAllData(allDiskCacheJson);
+        return new HashMap<>();
     }
 
     private Map<String, ?> parseAllData(String allCacheDataJson) {
@@ -155,8 +149,7 @@ public class GoSharedPreferences implements SharedPreferences {
         if (key == null) {
             return null;
         }
-        String value = App.getMemoryCache(key);
-        return !TextUtils.isEmpty(value) ? value : App.getDiskCache(key);
+        return App.getMemoryCache(key);
     }
 
     @Override
@@ -222,14 +215,12 @@ public class GoSharedPreferences implements SharedPreferences {
         @Override
         public Editor remove(String key) {
             App.deleteMemoryCache(key);
-            App.deleteDiskCache(key);
             return this;
         }
 
         @Override
         public Editor clear() {
             App.clearMemoryCache();
-            App.clearDiskCache();
             return this;
         }
 
@@ -248,10 +239,7 @@ public class GoSharedPreferences implements SharedPreferences {
         private void putByString(String key, Object value) {
             String valueStr = String.valueOf(value);
 
-            //内存缓存
             App.setMemoryCache(key, valueStr, -1);
-            //磁盘缓存
-            App.setDiskCache(key, valueStr);
 
             for (OnSharedPreferenceChangeListener listener : mOnChangeListeners) {
                 listener.onSharedPreferenceChanged(mSharedPreferences, key);
