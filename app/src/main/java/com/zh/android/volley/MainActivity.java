@@ -6,15 +6,6 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.zh.android.volley.util.AssetUtils;
-import com.zh.android.volley.util.ToastUtil;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-
-import app.App;
-
 public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,68 +61,8 @@ public class MainActivity extends AppCompatActivity {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_GO_HTTP_CLIENT);
             }
         });
-        findViewById(R.id.start_all_web_server_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startHttpServer();
-                startFileHttpServer();
-                startWebSocketServer();
-                ToastUtil.toast(getApplicationContext(), "启动所有Web服务成功");
-            }
-        });
-        findViewById(R.id.close_all_web_server_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                List<Integer> ports = Arrays.asList(
-                        Constant.HTTP_SERVER_PORT,
-                        Constant.FILE_HTTP_SERVER_PORT,
-                        Constant.WEB_SOCKET_SERVER_PORT
-                );
-                for (Integer port : ports) {
-                    App.stopServer(port);
-                }
-                ToastUtil.toast(getApplicationContext(), "关闭所有Web服务成功");
-            }
-        });
     }
 
     private void setData() {
-    }
-
-    private void startHttpServer() {
-        //网站的根目录文件夹名称
-        String websiteDirName = "web";
-        //拷贝到的外部文件夹路径
-        String outDirPath = new File(
-                getApplicationContext().getExternalCacheDir().getAbsolutePath(),
-                websiteDirName
-        ).getAbsolutePath();
-        //开始拷贝
-        AssetUtils.copyFilesFromAssets(
-                getApplicationContext(),
-                websiteDirName,
-                outDirPath
-        );
-        App.startHttpServer(Constant.HTTP_SERVER_PORT, "/", outDirPath, outDirPath + "/static", "index.html");
-    }
-
-    private void startFileHttpServer() {
-        //获取数据库文件存放目录
-        String dbPath = getDatabasePath("file").getAbsolutePath();
-        //创建存储数据库文件的文件夹
-        File dbFile = new File(dbPath);
-        if (!dbFile.exists()) {
-            dbFile.mkdirs();
-        }
-        //配置文件上传历史记录数据库
-        App.configFileUploadHistoryDir(dbFile.getAbsolutePath());
-        //配置文件上传的文件存储目录
-        App.configFileUploadDir(getApplication().getExternalCacheDir().getAbsolutePath());
-        //启动文件服务
-        App.startFileHttpServer(Constant.FILE_HTTP_SERVER_PORT);
-    }
-
-    private void startWebSocketServer() {
-        App.startWebSocketServer(Constant.WEB_SOCKET_SERVER_PORT, "/ws", "");
     }
 }

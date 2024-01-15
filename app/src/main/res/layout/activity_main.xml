@@ -54,19 +54,5 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="GoHttpClient GET 请求" />
-
-        <Button
-            android:id="@+id/start_all_web_server_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="启动所有Web服务" />
-
-        <Button
-            android:id="@+id/close_all_web_server_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="关闭所有Web服务" />
     </LinearLayout>
 </LinearLayout>
