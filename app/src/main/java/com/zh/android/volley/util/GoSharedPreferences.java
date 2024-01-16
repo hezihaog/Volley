@@ -120,7 +120,7 @@ public class GoSharedPreferences implements SharedPreferences {
     @Override
     public float getFloat(String key, float defValue) {
         String value = getByKey(key);
-        if (value == null) {
+        if (TextUtils.isEmpty(value)) {
             return defValue;
         }
         return Long.parseLong(value);
@@ -129,7 +129,7 @@ public class GoSharedPreferences implements SharedPreferences {
     @Override
     public boolean getBoolean(String key, boolean defValue) {
         String value = getByKey(key);
-        if (value == null) {
+        if (TextUtils.isEmpty(value)) {
             return defValue;
         }
         return Boolean.parseBoolean(value);
