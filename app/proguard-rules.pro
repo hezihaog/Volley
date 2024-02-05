@@ -91,4 +91,6 @@
 #Rxjava、RxAndroid，官方ReadMe文档中说明无需特殊配置
 -dontwarn java.util.concurrent.Flow*
 #okhttp3、okio、retrofit，jar包中已包含相关proguard规则，无需配置
-#其他一些配置
+
+# 不混淆android-curl
+-keep class com.github.yutianzuo.curl_native.HttpManager {*;}
