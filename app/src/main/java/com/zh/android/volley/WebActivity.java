@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -129,6 +130,14 @@ public class WebActivity extends AppCompatActivity {
         setSavePassword(false);
         //移除高危风险js监听
         setRemoveJavascriptInterface();
+        vWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onReceivedTitle(WebView view, String title) {
+                super.onReceivedTitle(view, title);
+                //获取到网页标题，更新Toolbar的标题
+                vToolbar.setTitle(title);
+            }
+        });
         vWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
