@@ -61,6 +61,13 @@ public class MainActivity extends AppCompatActivity {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_GO_HTTP_CLIENT);
             }
         });
+        //curl实现
+        findViewById(R.id.get_request_curl_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                HomeActivity.start(MainActivity.this, HomeActivity.TYPE_CURL);
+            }
+        });
     }
 
     private void setData() {

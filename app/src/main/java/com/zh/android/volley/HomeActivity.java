@@ -14,6 +14,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -22,6 +23,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpClientStack;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.Volley;
+import com.github.yutianzuo.curl_native.HttpManager;
+import com.github.yutianzuo.curl_native.NetRequester;
+import com.github.yutianzuo.curl_native.RequestManager;
+import com.github.yutianzuo.curl_native.utils.Misc;
 import com.google.common.reflect.TypeToken;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
@@ -57,6 +62,7 @@ public class HomeActivity extends AppCompatActivity {
     public static final int TYPE_OKHTTP_WITH_CRONET = 4;
     public static final int TYPE_ASYNC_HTTP_CLIENT = 5;
     public static final int TYPE_GO_HTTP_CLIENT = 6;
+    public static final int TYPE_CURL = 7;
 
     private Toolbar vToolbar;
     private SmartRefreshLayout vRefreshLayout;
@@ -73,7 +79,7 @@ public class HomeActivity extends AppCompatActivity {
      */
     private int mCurrentPage;
 
-    private final SharedPreferences mGoSharedPreferences = GoSharedPreferences.getInstance();
+    private final SharedPreferences mSharedPreferences = GoSharedPreferences.getInstance();
 
     public static void start(Activity activity, int type) {
         Intent intent = new Intent(activity, HomeActivity.class);
@@ -88,16 +94,18 @@ public class HomeActivity extends AppCompatActivity {
         findView();
         bindView();
         initVolley(getIntent());
+        initCurl();
         setData();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unInitCurl();
         if (mRequestQueue != null) {
             mRequestQueue.stop();
         }
-        mGoSharedPreferences.edit().clear().apply();
+        mSharedPreferences.edit().clear().apply();
     }
 
     private void findView() {
@@ -162,6 +170,14 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    private void initCurl() {
+        NetRequester.INSTANCE.init(this);
+    }
+
+    private void unInitCurl() {
+        NetRequester.INSTANCE.unInit();
+    }
+
     private void setData() {
         refresh();
     }
@@ -185,7 +201,7 @@ public class HomeActivity extends AppCompatActivity {
         }.getType();
 
         //优先从缓存中获取
-        String json = mGoSharedPreferences.getString(KEY_CACHE_LIST_PREV + page, "");
+        String json = mSharedPreferences.getString(KEY_CACHE_LIST_PREV + page, "");
         if (!TextUtils.isEmpty(json)) {
             finishRefreshOrLoadMore(isRefresh);
             HomeArticleModel response = JSONObject.parseObject(json, type);
@@ -195,11 +211,11 @@ public class HomeActivity extends AppCompatActivity {
 
         long startTime = System.currentTimeMillis();
 
-        loadByVolley(url, type, new LoadCallback() {
+        LoadCallback loadCallback = new LoadCallback() {
             @Override
             public void onSuccess(HomeArticleModel response) {
                 //缓存数据到内存中
-                SharedPreferences.Editor editor = mGoSharedPreferences.edit();
+                SharedPreferences.Editor editor = mSharedPreferences.edit();
                 editor.putString(KEY_CACHE_LIST_PREV + page, JSONObject.toJSONString(response));
                 editor.apply();
                 //渲染页面
@@ -218,7 +234,13 @@ public class HomeActivity extends AppCompatActivity {
                 ToastUtil.toast(getApplicationContext(), "完成耗时：" + (endTime - startTime) + "ms");
                 finishRefreshOrLoadMore(isRefresh);
             }
-        });
+        };
+
+        if (isUseCurl()) {
+            loadByCurl(url, type, loadCallback);
+        } else {
+            loadByVolley(url, type, loadCallback);
+        }
     }
 
     public interface LoadCallback {
@@ -227,6 +249,39 @@ public class HomeActivity extends AppCompatActivity {
         void onError(Exception error);
 
         void onFinish();
+    }
+
+    /**
+     * 使用curl发起请求
+     */
+    private void loadByCurl(String url, Type type, LoadCallback callback) {
+        RequestManager requestManager = HttpManager.INSTANCE.getRequest();
+        requestManager.setHost(url);
+        requestManager.setCertPath(Misc.getAppDir(getApplicationContext()) + Misc.CERT_NAME);
+
+        NetRequester.UrlBuilder builder = new NetRequester.UrlBuilder().with(requestManager);
+        builder.get(new NetRequester.HttpCallbackBiz() {
+            @Override
+            public void success(com.github.yutianzuo.curl_native.Response data) {
+                HomeArticleModel model = JSON.parseObject(data.response, type);
+                if (callback != null) {
+                    callback.onSuccess(model);
+                    callback.onFinish();
+                }
+            }
+
+            @Override
+            public void fail(int errorCode) {
+                if (callback != null) {
+                    callback.onError(new RuntimeException("请求错误，错误码：" + errorCode));
+                    callback.onFinish();
+                }
+            }
+
+            @Override
+            public void progress(float percent) {
+            }
+        });
     }
 
     /**
@@ -296,5 +351,13 @@ public class HomeActivity extends AppCompatActivity {
         //更新列表
         mListData.addAll(list);
         mListAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * 是否使用curl
+     */
+    private boolean isUseCurl() {
+        int type = getIntent().getIntExtra(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
+        return type == TYPE_CURL;
     }
 }
