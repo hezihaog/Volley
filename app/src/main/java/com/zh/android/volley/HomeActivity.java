@@ -260,7 +260,7 @@ public class HomeActivity extends AppCompatActivity {
         requestManager.setCertPath(Misc.getAppDir(getApplicationContext()) + Misc.CERT_NAME);
 
         NetRequester.UrlBuilder builder = new NetRequester.UrlBuilder().with(requestManager);
-        builder.get(new NetRequester.HttpCallbackBiz() {
+        builder.get(new NetRequester.HttpResultCallback() {
             @Override
             public void success(com.github.yutianzuo.curl_native.Response data) {
                 HomeArticleModel model = JSON.parseObject(data.response, type);
@@ -276,10 +276,6 @@ public class HomeActivity extends AppCompatActivity {
                     callback.onError(new RuntimeException("请求错误，错误码：" + errorCode));
                     callback.onFinish();
                 }
-            }
-
-            @Override
-            public void progress(float percent) {
             }
         });
     }
