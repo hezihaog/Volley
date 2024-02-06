@@ -27,6 +27,7 @@ import com.github.yutianzuo.curl_native.HttpManager;
 import com.github.yutianzuo.curl_native.NetRequester;
 import com.github.yutianzuo.curl_native.RequestManager;
 import com.github.yutianzuo.curl_native.utils.Misc;
+import com.github.yutianzuo.native_crash_handler.NativeCrashHandler;
 import com.google.common.reflect.TypeToken;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
@@ -41,6 +42,7 @@ import com.zh.android.volley.volley.GoHttpClientStack;
 import com.zh.android.volley.volley.OkHttpStack;
 import com.zh.android.volley.volley.request.FastJsonRequest;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -170,10 +172,18 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 初始化curl
+     */
     private void initCurl() {
         NetRequester.INSTANCE.init(this);
+        //native异常处理器，写日志到目录
+        NativeCrashHandler.installNativeCrashHandler(new File(getFilesDir(), "android-curl_crash.log").getAbsolutePath());
     }
 
+    /**
+     * 解初始化curl
+     */
     private void unInitCurl() {
         NetRequester.INSTANCE.unInit();
     }
