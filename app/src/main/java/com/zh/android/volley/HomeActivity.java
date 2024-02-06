@@ -195,10 +195,9 @@ public class HomeActivity extends AppCompatActivity {
 
         long startTime = System.currentTimeMillis();
 
-        //创建请求，设置回调
-        Request<HomeArticleModel> request = new FastJsonRequest<HomeArticleModel>(url, type, new Response.Listener<HomeArticleModel>() {
+        loadByVolley(url, type, new LoadCallback() {
             @Override
-            public void onResponse(HomeArticleModel response) {
+            public void onSuccess(HomeArticleModel response) {
                 //缓存数据到内存中
                 SharedPreferences.Editor editor = mGoSharedPreferences.edit();
                 editor.putString(KEY_CACHE_LIST_PREV + page, JSONObject.toJSONString(response));
@@ -206,19 +205,56 @@ public class HomeActivity extends AppCompatActivity {
                 //渲染页面
                 processResult(response, isRefresh);
             }
+
+            @Override
+            public void onError(Exception error) {
+                error.printStackTrace();
+                ToastUtil.toast(getApplicationContext(), "请求失败：" + error.getMessage());
+            }
+
+            @Override
+            public void onFinish() {
+                long endTime = System.currentTimeMillis();
+                ToastUtil.toast(getApplicationContext(), "完成耗时：" + (endTime - startTime) + "ms");
+                finishRefreshOrLoadMore(isRefresh);
+            }
+        });
+    }
+
+    public interface LoadCallback {
+        void onSuccess(HomeArticleModel response);
+
+        void onError(Exception error);
+
+        void onFinish();
+    }
+
+    /**
+     * 使用Volley发起请求
+     */
+    private void loadByVolley(String url, Type type, LoadCallback callback) {
+        //创建请求，设置回调
+        Request<HomeArticleModel> request = new FastJsonRequest<HomeArticleModel>(url, type, new Response.Listener<HomeArticleModel>() {
+            @Override
+            public void onResponse(HomeArticleModel response) {
+                if (callback != null) {
+                    callback.onSuccess(response);
+                }
+            }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-                ToastUtil.toast(getApplicationContext(), "请求失败：" + error.getMessage());
+                if (callback != null) {
+                    callback.onError(error);
+                }
             }
         }) {
             @Override
             protected void onFinish() {
                 super.onFinish();
-                long endTime = System.currentTimeMillis();
-                ToastUtil.toast(getApplicationContext(), "完成耗时：" + (endTime - startTime) + "ms");
-                finishRefreshOrLoadMore(isRefresh);
+                if (callback != null) {
+                    callback.onFinish();
+                }
             }
         };
         //加入队列，发起请求
