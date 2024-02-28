@@ -205,7 +205,7 @@ public class HomeFragment extends BaseFragment {
     @Override
     public void setData() {
         super.setData();
-        refresh();
+        vRefreshLayout.autoRefresh();
     }
 
     private void refresh() {
