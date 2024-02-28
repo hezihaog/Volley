@@ -103,6 +103,11 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 
+    // Fragment封装库
+    implementation 'me.yokeyword:fragmentationx:1.0.1'
+    // 侧滑返回
+    implementation 'com.github.goweii:SwipeBack:1.1.0'
+
     //下拉刷新，上拉加载，核心依赖
     implementation 'io.github.scwang90:refresh-layout-kernel:2.0.6'
     //经典刷新头

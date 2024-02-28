@@ -1,21 +1,19 @@
 package com.zh.android.volley;
 
-import android.os.Bundle;
 import android.view.View;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-public class MainActivity extends AppCompatActivity {
+import com.zh.android.volley.base.BaseActivity;
+
+public class MainActivity extends BaseActivity {
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        bindView();
-        setData();
+    public int onInflaterViewId() {
+        return R.layout.activity_main;
     }
 
-    private void bindView() {
+    @Override
+    public void onBindView(View view) {
         //标题栏
         Toolbar toolbar = findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
@@ -68,8 +66,5 @@ public class MainActivity extends AppCompatActivity {
                 HomeActivity.start(MainActivity.this, HomeActivity.TYPE_CURL);
             }
         });
-    }
-
-    private void setData() {
     }
 }
