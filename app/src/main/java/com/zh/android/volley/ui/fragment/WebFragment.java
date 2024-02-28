@@ -18,6 +18,7 @@ import com.zh.android.volley.Constant;
 import com.zh.android.volley.R;
 import com.zh.android.volley.base.BaseFragment;
 import com.zh.android.volley.base.BaseSupportActivity;
+import com.zh.android.volley.ui.widget.WebProgress;
 import com.zh.android.volley.util.ToastUtil;
 
 /**
@@ -26,6 +27,7 @@ import com.zh.android.volley.util.ToastUtil;
 public class WebFragment extends BaseFragment {
     private Toolbar vToolbar;
     private WebView vWebView;
+    private WebProgress vProgress;
 
     public static void start(BaseSupportActivity activity, String link) {
         WebFragment fragment = new WebFragment();
@@ -58,6 +60,7 @@ public class WebFragment extends BaseFragment {
     private void findView(View view) {
         vToolbar = view.findViewById(R.id.tool_bar);
         vWebView = view.findViewById(R.id.web_view);
+        vProgress = view.findViewById(R.id.progress);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -66,6 +69,8 @@ public class WebFragment extends BaseFragment {
         getBaseSupportActivity().setSupportActionBar(vToolbar);
         vToolbar.setNavigationIcon(R.drawable.ic_action_back);
         vToolbar.setNavigationOnClickListener(view -> getBaseSupportActivity().onBackPressed());
+        //进度条
+        initWebProgress();
         //WebView
         initWebViewSettings();
     }
@@ -141,6 +146,13 @@ public class WebFragment extends BaseFragment {
                 //获取到网页标题，更新Toolbar的标题
                 vToolbar.setTitle(title);
             }
+
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                //更新进度条
+                vProgress.setWebProgress(newProgress);
+            }
         });
         vWebView.setWebViewClient(new WebViewClient() {
             @Override
@@ -149,7 +161,23 @@ public class WebFragment extends BaseFragment {
                 vWebView.loadUrl(url);
                 return true;
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                //隐藏进度条
+                vProgress.hide();
+                vProgress.setVisibility(View.GONE);
+            }
         });
+    }
+
+    /**
+     * 初始化进度条
+     */
+    private void initWebProgress() {
+        vProgress.setColor(R.color.purple_700);
+        vProgress.show();
     }
 
     /**
