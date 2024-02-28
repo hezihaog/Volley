@@ -73,7 +73,8 @@ public abstract class BaseActivity extends BaseSupportActivity implements Layout
 
     @Override
     protected boolean swipeBackEnable() {
-        return true;
+        // 关闭侧滑返回
+        return false;
     }
 
     /**

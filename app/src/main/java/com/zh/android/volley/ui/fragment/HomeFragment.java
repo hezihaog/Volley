@@ -1,14 +1,13 @@
-package com.zh.android.volley;
+package com.zh.android.volley.ui.fragment;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,6 +32,10 @@ import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
+import com.zh.android.volley.R;
+import com.zh.android.volley.WebActivity;
+import com.zh.android.volley.base.BaseFragment;
+import com.zh.android.volley.base.BaseSupportActivity;
 import com.zh.android.volley.item.HomeArticleItemViewBinder;
 import com.zh.android.volley.model.HomeArticleModel;
 import com.zh.android.volley.util.GoSharedPreferences;
@@ -50,7 +53,7 @@ import java.util.List;
 import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
 import me.drakeet.multitype.MultiTypeAdapter;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeFragment extends BaseFragment {
     public static final String KEY_TYPE = "KEY_TYPE";
 
     /**
@@ -83,25 +86,30 @@ public class HomeActivity extends AppCompatActivity {
 
     private final SharedPreferences mSharedPreferences = GoSharedPreferences.getInstance();
 
-    public static void start(Activity activity, int type) {
-        Intent intent = new Intent(activity, HomeActivity.class);
-        intent.putExtra(HomeActivity.KEY_TYPE, type);
-        activity.startActivity(intent);
+    public static void start(BaseSupportActivity activity, int type) {
+        HomeFragment fragment = new HomeFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        args.putInt(HomeFragment.KEY_TYPE, type);
+        activity.start(fragment);
     }
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
-        findView();
+    public int onInflaterViewId() {
+        return R.layout.activity_home;
+    }
+
+    @Override
+    public void onBindView(View view) {
+        findView(view);
         bindView();
-        initVolley(getIntent());
+        initVolley();
         initCurl();
         setData();
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         unInitCurl();
         if (mRequestQueue != null) {
@@ -110,18 +118,18 @@ public class HomeActivity extends AppCompatActivity {
         mSharedPreferences.edit().clear().apply();
     }
 
-    private void findView() {
-        vToolbar = findViewById(R.id.tool_bar);
-        vRefreshLayout = findViewById(R.id.refresh_layout);
-        vList = findViewById(R.id.list);
+    private void findView(View view) {
+        vToolbar = view.findViewById(R.id.tool_bar);
+        vRefreshLayout = view.findViewById(R.id.refresh_layout);
+        vList = view.findViewById(R.id.list);
     }
 
     private void bindView() {
         //标题栏
-        setSupportActionBar(vToolbar);
+        ((AppCompatActivity) requireActivity()).setSupportActionBar(vToolbar);
         vToolbar.setNavigationIcon(R.drawable.ic_action_back);
-        vToolbar.setNavigationOnClickListener(view -> finish());
-        vList.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+        vToolbar.setNavigationOnClickListener(view -> getBaseSupportActivity().onBackPressedSupport());
+        vList.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
         //设置适配器
         vList.setAdapter(mListAdapter);
         //注册条目类型
@@ -133,7 +141,7 @@ public class HomeActivity extends AppCompatActivity {
                         HomeArticleModel.PageModel.ItemModel itemModel = mListData.get(position);
                         String link = itemModel.getLink();
                         //点击跳转到浏览器
-                        WebActivity.start(HomeActivity.this, link);
+                        WebActivity.start(requireActivity(), link);
                     }
                 }));
         //下拉刷新
@@ -152,23 +160,29 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    private void initVolley(Intent intent) {
-        int type = intent.getIntExtra(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
+    private void initVolley() {
+        Context context = requireContext().getApplicationContext();
+        Bundle args = getArguments();
+        if (args == null) {
+            args = new Bundle();
+        }
+        int type = args.getInt(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
+
         //创建请求队列
         if (type == TYPE_HTTP_URL_CONNECTION) {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HurlStack());
+            mRequestQueue = Volley.newRequestQueue(context, new HurlStack());
         } else if (type == TYPE_HTTP_CLIENT) {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HttpClientStack(new DefaultHttpClient()));
+            mRequestQueue = Volley.newRequestQueue(context, new HttpClientStack(new DefaultHttpClient()));
         } else if (type == TYPE_OKHTTP) {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new OkHttpStack(getApplicationContext(), false));
+            mRequestQueue = Volley.newRequestQueue(context, new OkHttpStack(context, false));
         } else if (type == TYPE_OKHTTP_WITH_CRONET) {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new OkHttpStack(getApplicationContext(), true));
+            mRequestQueue = Volley.newRequestQueue(context, new OkHttpStack(context, true));
         } else if (type == TYPE_ASYNC_HTTP_CLIENT) {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new AsyncHttpClientStack());
+            mRequestQueue = Volley.newRequestQueue(context, new AsyncHttpClientStack());
         } else if (type == TYPE_GO_HTTP_CLIENT) {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new GoHttpClientStack());
+            mRequestQueue = Volley.newRequestQueue(context, new GoHttpClientStack());
         } else {
-            mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HurlStack());
+            mRequestQueue = Volley.newRequestQueue(context, new HurlStack());
         }
     }
 
@@ -176,9 +190,10 @@ public class HomeActivity extends AppCompatActivity {
      * 初始化curl
      */
     private void initCurl() {
-        NetRequester.INSTANCE.init(this);
+        Context context = requireActivity().getApplicationContext();
+        NetRequester.INSTANCE.init(context);
         //native异常处理器，写日志到目录
-        NativeCrashHandler.installNativeCrashHandler(new File(getFilesDir(), "android-curl_crash.log").getAbsolutePath());
+        NativeCrashHandler.installNativeCrashHandler(new File(context.getFilesDir(), "android-curl_crash.log").getAbsolutePath());
     }
 
     /**
@@ -188,7 +203,9 @@ public class HomeActivity extends AppCompatActivity {
         NetRequester.INSTANCE.unInit();
     }
 
-    private void setData() {
+    @Override
+    public void setData() {
+        super.setData();
         refresh();
     }
 
@@ -235,13 +252,13 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onError(Exception error) {
                 error.printStackTrace();
-                ToastUtil.toast(getApplicationContext(), "请求失败：" + error.getMessage());
+                ToastUtil.toast(getContext(), "请求失败：" + error.getMessage());
             }
 
             @Override
             public void onFinish() {
                 long endTime = System.currentTimeMillis();
-                ToastUtil.toast(getApplicationContext(), "完成耗时：" + (endTime - startTime) + "ms");
+                ToastUtil.toast(getContext(), "完成耗时：" + (endTime - startTime) + "ms");
                 finishRefreshOrLoadMore(isRefresh);
             }
         };
@@ -267,7 +284,7 @@ public class HomeActivity extends AppCompatActivity {
     private void loadByCurl(String url, Type type, LoadCallback callback) {
         RequestManager requestManager = HttpManager.INSTANCE.getRequest();
         requestManager.setHost(url);
-        requestManager.setCertPath(Misc.getAppDir(getApplicationContext()) + Misc.CERT_NAME);
+        requestManager.setCertPath(Misc.getAppDir(requireContext()) + Misc.CERT_NAME);
 
         NetRequester.UrlBuilder builder = new NetRequester.UrlBuilder().with(requestManager);
         builder.get(new NetRequester.HttpResultCallback() {
@@ -363,7 +380,11 @@ public class HomeActivity extends AppCompatActivity {
      * 是否使用curl
      */
     private boolean isUseCurl() {
-        int type = getIntent().getIntExtra(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
+        Bundle args = getArguments();
+        if (args == null) {
+            args = new Bundle();
+        }
+        int type = args.getInt(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
         return type == TYPE_CURL;
     }
 }

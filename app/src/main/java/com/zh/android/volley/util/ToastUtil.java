@@ -11,10 +11,14 @@ public class ToastUtil {
     }
 
     public static void toast(Context context, String msg) {
+        if (context == null) {
+            return;
+        }
+        Context ctx = context.getApplicationContext();
         Runnable action = new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show();
             }
         };
         if (Looper.getMainLooper().getThread() == Thread.currentThread()) {

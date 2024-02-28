@@ -65,6 +65,10 @@ public abstract class BaseFragment extends BaseSupportFragment implements Layout
     public void setData() {
     }
 
+    public BaseSupportActivity getBaseSupportActivity() {
+        return (BaseSupportActivity) requireActivity();
+    }
+
     @Override
     public FragmentActivity getFragmentActivity() {
         return getActivity();
