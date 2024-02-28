@@ -9,10 +9,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
+import me.yokeyword.fragmentation.anim.DefaultHorizontalAnimator;
+import me.yokeyword.fragmentation.anim.FragmentAnimator;
+
 /**
  * Fragment基类
  */
 public abstract class BaseFragment extends BaseSupportFragment implements LayoutCallback, LifecycleOwnerExt {
+    @Override
+    public FragmentAnimator onCreateFragmentAnimator() {
+        //设置横向切换跳转动画
+        return new DefaultHorizontalAnimator();
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
