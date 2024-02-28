@@ -33,7 +33,6 @@ import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 import com.zh.android.volley.R;
-import com.zh.android.volley.WebActivity;
 import com.zh.android.volley.base.BaseFragment;
 import com.zh.android.volley.base.BaseSupportActivity;
 import com.zh.android.volley.item.HomeArticleItemViewBinder;
@@ -96,7 +95,7 @@ public class HomeFragment extends BaseFragment {
 
     @Override
     public int onInflaterViewId() {
-        return R.layout.activity_home;
+        return R.layout.fragment_home;
     }
 
     @Override
@@ -128,7 +127,7 @@ public class HomeFragment extends BaseFragment {
         //标题栏
         ((AppCompatActivity) requireActivity()).setSupportActionBar(vToolbar);
         vToolbar.setNavigationIcon(R.drawable.ic_action_back);
-        vToolbar.setNavigationOnClickListener(view -> getBaseSupportActivity().onBackPressedSupport());
+        vToolbar.setNavigationOnClickListener(view -> getBaseSupportActivity().onBackPressed());
         vList.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
         //设置适配器
         vList.setAdapter(mListAdapter);
@@ -141,7 +140,7 @@ public class HomeFragment extends BaseFragment {
                         HomeArticleModel.PageModel.ItemModel itemModel = mListData.get(position);
                         String link = itemModel.getLink();
                         //点击跳转到浏览器
-                        WebActivity.start(requireActivity(), link);
+                        WebFragment.start(getBaseSupportActivity(), link);
                     }
                 }));
         //下拉刷新
@@ -161,7 +160,7 @@ public class HomeFragment extends BaseFragment {
     }
 
     private void initVolley() {
-        Context context = requireContext().getApplicationContext();
+        Context context = getContext().getApplicationContext();
         Bundle args = getArguments();
         if (args == null) {
             args = new Bundle();

@@ -1,10 +1,8 @@
-package com.zh.android.volley;
+package com.zh.android.volley.ui.fragment;
 
 import static android.os.Build.VERSION_CODES.KITKAT;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -14,36 +12,42 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.zh.android.volley.Constant;
+import com.zh.android.volley.R;
+import com.zh.android.volley.base.BaseFragment;
+import com.zh.android.volley.base.BaseSupportActivity;
 import com.zh.android.volley.util.ToastUtil;
 
 /**
  * WebView页面
  */
-public class WebActivity extends AppCompatActivity {
+public class WebFragment extends BaseFragment {
     private Toolbar vToolbar;
     private WebView vWebView;
 
-    public static void start(Activity activity, String link) {
-        Intent intent = new Intent(activity, WebActivity.class);
-        intent.putExtra(Constant.KEY_WEB_LINK, link);
-        activity.startActivity(intent);
+    public static void start(BaseSupportActivity activity, String link) {
+        WebFragment fragment = new WebFragment();
+        Bundle args = new Bundle();
+        args.putString(Constant.KEY_WEB_LINK, link);
+        fragment.setArguments(args);
+        activity.start(fragment);
     }
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_web);
-        findView();
+    public int onInflaterViewId() {
+        return R.layout.fragment_web;
+    }
+
+    @Override
+    public void onBindView(View view) {
+        findView(view);
         bindView();
-        setData(getIntent());
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         if (vWebView != null) {
             vWebView.stopLoading();
@@ -51,17 +55,17 @@ public class WebActivity extends AppCompatActivity {
         }
     }
 
-    private void findView() {
-        vToolbar = findViewById(R.id.tool_bar);
-        vWebView = findViewById(R.id.web_view);
+    private void findView(View view) {
+        vToolbar = view.findViewById(R.id.tool_bar);
+        vWebView = view.findViewById(R.id.web_view);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private void bindView() {
         //标题栏
-        setSupportActionBar(vToolbar);
+        getBaseSupportActivity().setSupportActionBar(vToolbar);
         vToolbar.setNavigationIcon(R.drawable.ic_action_back);
-        vToolbar.setNavigationOnClickListener(view -> finish());
+        vToolbar.setNavigationOnClickListener(view -> getBaseSupportActivity().onBackPressed());
         //WebView
         initWebViewSettings();
     }
@@ -184,22 +188,28 @@ public class WebActivity extends AppCompatActivity {
         vWebView.removeJavascriptInterface("accessibilityTraversal");
     }
 
-    private void setData(Intent intent) {
-        String link = intent.getStringExtra(Constant.KEY_WEB_LINK);
+    @Override
+    public void setData() {
+        super.setData();
+        Bundle args = getArguments();
+        if (args == null) {
+            args = new Bundle();
+        }
+        String link = args.getString(Constant.KEY_WEB_LINK);
         if (link == null || TextUtils.isEmpty(link)) {
-            ToastUtil.toast(getApplicationContext(), "跳转链接不能为空");
-            finish();
+            ToastUtil.toast(getContext(), "跳转链接不能为空");
+            getBaseSupportActivity().onBackPressed();
             return;
         }
         vWebView.loadUrl(link);
     }
 
     @Override
-    public void onBackPressed() {
+    public boolean onBackPressedSupport() {
         if (vWebView.canGoBack()) {
             vWebView.goBack();
-            return;
+            return true;
         }
-        super.onBackPressed();
+        return super.onBackPressedSupport();
     }
 }
