@@ -5,10 +5,7 @@ import android.text.TextUtils;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.toolbox.HttpStack;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.zh.android.volley.util.GoHttpClient;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,11 +13,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import app.App;
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.ProtocolVersion;
@@ -50,30 +44,28 @@ public class GoHttpClientStack implements HttpStack {
         //请求头
         String headersStr = getHeadersStr(request, additionalHeaders);
 
-        //发送请求，并获取响应Json，格式是自定义的
-        String responseJson = App.sendRequest(
+        //发送请求，并获取响应
+        GoHttpClient.GoClientResponse response = GoHttpClient.sendRequest(
                 method,
                 request.getUrl(),
                 bodyParams,
                 headersStr,
                 timeoutMs
         );
-        //解析响应Json为实体类
-        GoClientResponse response = parseJson2GoClientResponse(responseJson);
 
         //存在错误
-        if (!TextUtils.isEmpty(response.error)) {
-            throw new IOException(response.error);
+        if (!TextUtils.isEmpty(response.getError())) {
+            throw new IOException(response.getError());
         }
 
         //转换响应状态行
         BasicStatusLine responseStatus = new BasicStatusLine(
                 //把Go返回的网络协议，转为HttpClient的网络协议类
-                parseProtocol(response.protocolVersion),
+                parseProtocol(response.getProtocolVersion()),
                 //响应码
-                response.statusCode,
+                response.getStatusCode(),
                 //消息
-                response.respLine
+                response.getRespLine()
         );
 
         //把GoHttpClient的请求结果转换成HttpClient的请求结果
@@ -82,7 +74,7 @@ public class GoHttpClientStack implements HttpStack {
         httpClientResponse.setEntity(entityFromGoHttpClientResponse(response));
 
         //响应头转换
-        Map<String, ArrayList<String>> responseHeaders = response.respHeaders;
+        Map<String, ArrayList<String>> responseHeaders = response.getRespHeaders();
         for (Map.Entry<String, ArrayList<String>> header : responseHeaders.entrySet()) {
             String name = header.getKey();
             ArrayList<String> values = header.getValue();
@@ -90,47 +82,6 @@ public class GoHttpClientStack implements HttpStack {
             httpClientResponse.addHeader(new BasicHeader(name, value));
         }
         return httpClientResponse;
-    }
-
-    private static class GoClientResponse {
-        /**
-         * 响应状态码
-         */
-        int statusCode;
-
-        /**
-         * 响应体
-         */
-        String bodyString;
-
-        /**
-         * 响应行
-         */
-        String respLine;
-
-        /**
-         * 协议版本
-         */
-        String protocolVersion;
-
-        /**
-         * 响应头
-         */
-        Map<String, ArrayList<String>> respHeaders;
-
-        /**
-         * 错误信息
-         */
-        String error;
-
-        public GoClientResponse(int statusCode, String bodyString, String respLine, String protocolVersion, Map<String, ArrayList<String>> respHeaders, String error) {
-            this.statusCode = statusCode;
-            this.bodyString = bodyString;
-            this.respLine = respLine;
-            this.protocolVersion = protocolVersion;
-            this.respHeaders = respHeaders;
-            this.error = error;
-        }
     }
 
     /**
@@ -152,14 +103,14 @@ public class GoHttpClientStack implements HttpStack {
     /**
      * Go响应转换为HttpClient的HttpEntity对象
      */
-    private static HttpEntity entityFromGoHttpClientResponse(GoClientResponse response) throws IOException {
+    private static HttpEntity entityFromGoHttpClientResponse(GoHttpClient.GoClientResponse response) throws IOException {
         BasicHttpEntity entity = new BasicHttpEntity();
-        InputStream responseBodyStream = strToInputStream(response.bodyString);
+        InputStream responseBodyStream = strToInputStream(response.getBodyString());
 
         //响应体信息
         entity.setContent(responseBodyStream);
         //响应头
-        Map<String, ArrayList<String>> respHeaders = response.respHeaders;
+        Map<String, ArrayList<String>> respHeaders = response.getRespHeaders();
 
         String contentLengthStr = getResponseHeader(respHeaders, "Content-Length");
         long contentLength = TextUtils.isEmpty(contentLengthStr) ? 0 : Long.parseLong(contentLengthStr);
@@ -251,74 +202,5 @@ public class GoHttpClientStack implements HttpStack {
                     .append(entry.getValue());
         }
         return builder.toString();
-    }
-
-    /**
-     * 解析Json为GoClientResponse
-     */
-    private static GoClientResponse parseJson2GoClientResponse(String responseJson) {
-        Map<String, Object> jsonMap = jsonToMap(responseJson);
-        // 状态码
-        String statusCode = String.valueOf(jsonMap.get("statusCode"));
-        // 响应体
-        String bodyString = String.valueOf(jsonMap.get("bodyString"));
-        // 响应行
-        String respLine = String.valueOf(jsonMap.get("respLine"));
-        // 协议版本
-        String protocolVersion = String.valueOf(jsonMap.get("protocolVersion"));
-        // 响应头
-        Map<String, ArrayList<String>> respHeaders = (Map<String, ArrayList<String>>) jsonMap.get("respHeaders");
-        // 错误信息
-        Object error = jsonMap.get("error");
-        String errorStr = error != null ? String.valueOf(error) : "";
-
-        boolean invalidStatusCode = TextUtils.isEmpty(statusCode) || "null".equalsIgnoreCase(statusCode);
-
-        return new GoClientResponse(
-                Integer.parseInt(invalidStatusCode ? "0" : statusCode),
-                bodyString,
-                respLine,
-                protocolVersion,
-                respHeaders,
-                errorStr
-        );
-    }
-
-    /**
-     * Json字符串转Map
-     */
-    private static Map<String, Object> jsonToMap(String json) {
-        Map<String, Object> map = new HashMap<>();
-        try {
-            JSONObject jsonObject = new JSONObject(json);
-            Iterator<String> keys = jsonObject.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                Object value = jsonObject.get(key);
-                if (value instanceof JSONObject) {
-                    value = jsonToMap(value.toString());
-                } else if (value instanceof JSONArray) {
-                    value = jsonArrayToList((JSONArray) value);
-                }
-                map.put(key, value);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return map;
-    }
-
-    private static List<Object> jsonArrayToList(JSONArray jsonArray) throws JSONException {
-        List<Object> list = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            Object value = jsonArray.get(i);
-            if (value instanceof JSONObject) {
-                value = jsonToMap(value.toString());
-            } else if (value instanceof JSONArray) {
-                value = jsonArrayToList((JSONArray) value);
-            }
-            list.add(value);
-        }
-        return list;
     }
 }
