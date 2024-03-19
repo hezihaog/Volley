@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
-import me.yokeyword.fragmentation.anim.DefaultHorizontalAnimator;
+import me.yokeyword.fragmentation.anim.DefaultVerticalAnimator;
 import me.yokeyword.fragmentation.anim.FragmentAnimator;
 
 /**
@@ -18,8 +18,10 @@ import me.yokeyword.fragmentation.anim.FragmentAnimator;
 public abstract class BaseFragment extends BaseSupportFragment implements LayoutCallback, LifecycleOwnerExt {
     @Override
     public FragmentAnimator onCreateFragmentAnimator() {
-        //设置横向切换跳转动画
-        return new DefaultHorizontalAnimator();
+        // 纵向切换动画
+        return new DefaultVerticalAnimator();
+        // 横向切换动画
+        // return new DefaultHorizontalAnimator();
     }
 
     @Override
