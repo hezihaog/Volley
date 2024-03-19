@@ -37,6 +37,7 @@ import com.zh.android.volley.base.BaseFragment;
 import com.zh.android.volley.base.BaseSupportActivity;
 import com.zh.android.volley.item.HomeArticleItemViewBinder;
 import com.zh.android.volley.model.HomeArticleModel;
+import com.zh.android.volley.util.GoHttpClient;
 import com.zh.android.volley.util.GoSharedPreferences;
 import com.zh.android.volley.util.ToastUtil;
 import com.zh.android.volley.volley.AsyncHttpClientStack;
@@ -66,7 +67,8 @@ public class HomeFragment extends BaseFragment {
     public static final int TYPE_OKHTTP_WITH_CRONET = 4;
     public static final int TYPE_ASYNC_HTTP_CLIENT = 5;
     public static final int TYPE_GO_HTTP_CLIENT = 6;
-    public static final int TYPE_CURL = 7;
+    public static final int TYPE_GO_HTTP_CLIENT_ASYNC = 7;
+    public static final int TYPE_CURL = 8;
 
     private Toolbar vToolbar;
     private SmartRefreshLayout vRefreshLayout;
@@ -264,6 +266,8 @@ public class HomeFragment extends BaseFragment {
 
         if (isUseCurl()) {
             loadByCurl(url, type, loadCallback);
+        } else if (isUseGoHttpClientAsync()) {
+            loadByGoHttpClientAsync(url, type, loadCallback);
         } else {
             loadByVolley(url, type, loadCallback);
         }
@@ -275,6 +279,36 @@ public class HomeFragment extends BaseFragment {
         void onError(Exception error);
 
         void onFinish();
+    }
+
+    /**
+     * 使用GoHttpClient发起请求
+     */
+    private void loadByGoHttpClientAsync(String url, Type type, LoadCallback callback) {
+        GoHttpClient.sendRequestAsync(
+                "GET",
+                url,
+                "",
+                "Content-Type=application/x-www-form-urlencoded; charset=UTF-8",
+                2500,
+                new GoHttpClient.RequestCallback() {
+                    @Override
+                    public void onSuccess(GoHttpClient.GoClientResponse response) {
+                        HomeArticleModel model = JSON.parseObject(response.getBodyString(), type);
+                        if (callback != null) {
+                            callback.onSuccess(model);
+                            callback.onFinish();
+                        }
+                    }
+
+                    @Override
+                    public void onFail(String errorMsg) {
+                        if (callback != null) {
+                            callback.onError(new RuntimeException("请求错误，错误信息：" + errorMsg));
+                            callback.onFinish();
+                        }
+                    }
+                });
     }
 
     /**
@@ -378,12 +412,27 @@ public class HomeFragment extends BaseFragment {
     /**
      * 是否使用curl
      */
-    private boolean isUseCurl() {
+    private int getType() {
         Bundle args = getArguments();
         if (args == null) {
             args = new Bundle();
         }
-        int type = args.getInt(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
+        return args.getInt(KEY_TYPE, TYPE_HTTP_URL_CONNECTION);
+    }
+
+    /**
+     * 是否使用异步的GoHttpClient
+     */
+    private boolean isUseGoHttpClientAsync() {
+        int type = getType();
+        return type == TYPE_GO_HTTP_CLIENT_ASYNC;
+    }
+
+    /**
+     * 是否使用curl
+     */
+    private boolean isUseCurl() {
+        int type = getType();
         return type == TYPE_CURL;
     }
 }

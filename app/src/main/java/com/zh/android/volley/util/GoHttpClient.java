@@ -1,5 +1,7 @@
 package com.zh.android.volley.util;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
@@ -19,6 +21,11 @@ import app.HttpRequestCallback;
  * Go的Http请求客户端
  */
 public class GoHttpClient {
+    /**
+     * 主线程Handler
+     */
+    private static final Handler mMainHandler = new Handler(Looper.getMainLooper());
+
     /**
      * 同步发送Http请求
      *
@@ -61,19 +68,20 @@ public class GoHttpClient {
                 timeoutMs,
                 new HttpRequestCallback() {
                     @Override
-                    public void onSuccess(String responseJson) {
+                    public void onResponse(String responseJson) {
                         //解析响应Json为实体类
                         GoClientResponse response = GoHttpClient.parseJson2GoClientResponse(responseJson);
-                        if (callback != null) {
-                            callback.onSuccess(response);
-                        }
-                    }
-
-                    @Override
-                    public void onFail(String errorMsg) {
-                        if (callback != null) {
-                            callback.onFail(errorMsg);
-                        }
+                        mMainHandler.post(() -> {
+                            if (!TextUtils.isEmpty(response.getError())) {
+                                if (callback != null) {
+                                    callback.onFail(response.getError());
+                                }
+                            } else {
+                                if (callback != null) {
+                                    callback.onSuccess(response);
+                                }
+                            }
+                        });
                     }
                 }
         );

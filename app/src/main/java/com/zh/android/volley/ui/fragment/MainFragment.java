@@ -65,10 +65,18 @@ public class MainFragment extends BaseFragment {
             }
         });
         //GoHttpClient实现
-        view.findViewById(R.id.get_request_go_http_client_btn).setOnClickListener(new View.OnClickListener() {
+        View goHttpClientBtn = view.findViewById(R.id.get_request_go_http_client_btn);
+        goHttpClientBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 HomeFragment.start(activity, HomeFragment.TYPE_GO_HTTP_CLIENT);
+            }
+        });
+        goHttpClientBtn.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                HomeFragment.start(activity, HomeFragment.TYPE_GO_HTTP_CLIENT_ASYNC);
+                return true;
             }
         });
         //curl实现
